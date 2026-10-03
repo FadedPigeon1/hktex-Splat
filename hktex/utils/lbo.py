@@ -267,7 +267,7 @@ def align_eigen(
         # The solution is found via the SVD of the M-weighted correlation matrix.
 
         correlation_matrix = evecs_permuted.T * mass_matrix @ evecs_ref
-        U, _, Vt = scipy.linalg.svd(correlation_matrix)
+        U, _, Vt = scipy.linalg.svd(correlation_matrix, lapack_driver='gesvd')
         rotation_matrix = U @ Vt
 
         # Apply the optimal rotation.

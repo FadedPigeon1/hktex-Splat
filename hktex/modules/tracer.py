@@ -271,11 +271,19 @@ class GPUGeodesicTracer(GeodesicTracer):
         new_face_ids = end_meshpoints.faces
 
         if not bool((new_face_ids >= 0).all()):
-            bad = torch.nonzero(new_face_ids < 0, as_tuple=False).flatten()[:8].tolist()
-            raise AssertionError(
-                f"digeo returned invalid face ids (<0). "
-                f"num_bad={(new_face_ids < 0).sum().item()} sample_idx={bad}"
+            bad_idx = torch.nonzero(
+                new_face_ids < 0, as_tuple=False
+            ).flatten()
+
+            print(
+                f"WARNING: digeo failed for {bad_idx.numel()} sample(s): "
+                f"{bad_idx[:8].tolist()}"
             )
+
+            # Keep failed traces at their original mesh position.
+            src_idx = bad_idx.to(face_ids.device)
+            new_face_ids[bad_idx] = face_ids[src_idx].to(new_face_ids.device)
+            new_coords[bad_idx] = coords[src_idx.to(coords.device)].to(new_coords.device)
 
         if out_coords is None:
             out_coords = new_coords.to(device=coords.device, dtype=coords.dtype).clone()
