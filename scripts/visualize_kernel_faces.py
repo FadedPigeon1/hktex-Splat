@@ -21,7 +21,17 @@ DEFAULT_EXPERIMENT = REPO_ROOT / "outputs/uv-texture-fitting/test_connected@2026
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--kernel-id", type=int, required=True)
+    kernel_mode = parser.add_mutually_exclusive_group(required=True)
+    kernel_mode.add_argument("--kernel-id", type=int)
+    kernel_mode.add_argument("--kernel-ids", type=int, nargs="+", help="Render and compare a set of kernels")
+    kernel_mode.add_argument(
+        "--all-visible-kernels", action="store_true",
+        help="Find and render all kernels with at least one camera-visible affected face",
+    )
+    parser.add_argument(
+        "--debug-missing-coverage", action="store_true",
+        help="In multi-kernel mode, report uncovered mesh pixels and highlight them on the reference",
+    )
     parser.add_argument("--cutoff", type=float, default=0.01)
     parser.add_argument("--batch-size", type=int, default=512)
     parser.add_argument("--experiment", type=Path, default=DEFAULT_EXPERIMENT)
@@ -43,8 +53,13 @@ def parse_args():
         metavar=("X", "Y", "Z"), help="Camera target (forward hemisphere; no FOV limit)",
     )
     args = parser.parse_args()
-    if args.kernel_id < 0:
-        parser.error("--kernel-id must be nonnegative")
+    requested_ids = [] if args.all_visible_kernels else (
+        args.kernel_ids if args.kernel_ids is not None else [args.kernel_id]
+    )
+    if any(kernel_id < 0 for kernel_id in requested_ids):
+        parser.error("Kernel IDs must be nonnegative")
+    if len(set(requested_ids)) != len(requested_ids):
+        parser.error("--kernel-ids must not contain duplicates")
     if args.batch_size < 1:
         parser.error("--batch-size must be positive")
     if args.image_width < 1 or args.image_height < 1:
@@ -59,7 +74,9 @@ def parse_args():
         parser.error("Camera position and look-at target must differ")
     args.experiment = args.experiment.resolve()
     if args.output is None:
-        args.output = REPO_ROOT / "outputs/kernel_face_debug" / f"kernel_{args.kernel_id}_faces.ply"
+        stem = (f"kernel_{args.kernel_id}_faces" if args.kernel_id is not None
+                else "multi_kernel_faces")
+        args.output = REPO_ROOT / "outputs/kernel_face_debug" / f"{stem}.ply"
     args.output = args.output.resolve()
     if args.output.suffix.lower() not in {".ply", ".glb"}:
         parser.error("--output must end in .ply or .glb")
@@ -67,11 +84,10 @@ def parse_args():
 
 
 def visible_affected_faces(mesh, affected, camera_position, camera_look_at, batch_size):
-    """Return affected IDs whose centroids are the nearest full-mesh ray hit.
+    """Return affected IDs with any of seven samples visible to the camera.
 
-    This tests two-sided geometry, not face normals. Partially exposed triangles
-    with hidden centroids are occluded by this diagnostic. Behind-camera faces
-    and failed/no-hit rays are conservatively classified as occluded.
+    Test vertices, edge midpoints, and centroid against two-sided opaque geometry.
+    Behind-camera samples and failed/no-hit rays do not establish visibility.
     """
     import numpy as np
     from trimesh.ray.ray_triangle import RayMeshIntersector
@@ -81,35 +97,57 @@ def visible_affected_faces(mesh, affected, camera_position, camera_look_at, batc
     forward /= np.linalg.norm(forward)
     intersector = RayMeshIntersector(mesh)
     visible = []
+    print("Visibility mode: vertices+edge-midpoints+centroid")
+    sample_barys = np.array([
+        [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0],
+        [0.5, 0.5, 0.0], [0.0, 0.5, 0.5], [0.5, 0.0, 0.5],
+        [1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0],
+    ])
     mesh_scale = max(float(np.linalg.norm(mesh.extents)), np.finfo(float).eps)
     for start in range(0, len(affected), batch_size):
         face_ids = affected[start:start + batch_size]
-        centroids = mesh.vertices[mesh.faces[face_ids]].mean(axis=1)
-        offsets = centroids - camera
-        distances = np.linalg.norm(offsets, axis=1)
-        eligible = (distances > 0.0) & (offsets @ forward > 0.0)
-        if not eligible.any():
-            continue
-        target_ids = face_ids[eligible]
-        target_distances = distances[eligible]
-        directions = offsets[eligible] / target_distances[:, None]
-        origins = np.broadcast_to(camera, directions.shape).copy()
-        try:
-            locations, ray_ids, hit_faces = intersector.intersects_location(
-                ray_origins=origins, ray_directions=directions, multiple_hits=False,
-            )
-        except ModuleNotFoundError as error:
-            raise RuntimeError(
-                "Trimesh occlusion testing requires its ray dependencies (including rtree). "
-                "Install them in your HKTex environment."
-            ) from error
-        hit_distances = np.linalg.norm(locations - camera, axis=1)
-        tolerance = 1e-6 * mesh_scale + 1e-7 * target_distances[ray_ids]
-        is_visible = (hit_faces == target_ids[ray_ids]) & (
-            np.abs(hit_distances - target_distances[ray_ids]) <= tolerance
-        )
-        visible.extend(target_ids[ray_ids[is_visible]].tolist())
+        triangles = mesh.vertices[mesh.faces[face_ids]]
+        samples = np.einsum("sj,fjk->fsk", sample_barys, triangles).reshape(-1, 3)
+        sample_face_ids = np.repeat(face_ids, len(sample_barys))
+        # Keep at most --batch-size rays in each full-mesh intersection call.
+        for sample_start in range(0, len(samples), batch_size):
+            sample_stop = min(sample_start + batch_size, len(samples))
+            visible.extend(visible_sample_faces(
+                intersector, camera, forward, samples[sample_start:sample_stop],
+                sample_face_ids[sample_start:sample_stop], mesh_scale,
+            ))
     return np.asarray(sorted(set(visible)), dtype=np.int64)
+
+
+def visible_sample_faces(intersector, camera, forward, samples, face_ids, mesh_scale):
+    """Return face IDs for samples reached by the nearest opaque mesh hit."""
+    import numpy as np
+
+    offsets = samples - camera
+    distances = np.linalg.norm(offsets, axis=1)
+    eligible = (distances > 0.0) & (offsets @ forward > 0.0)
+    if not eligible.any():
+        return []
+    target_ids = face_ids[eligible]
+    target_distances = distances[eligible]
+    directions = offsets[eligible] / target_distances[:, None]
+    origins = np.broadcast_to(camera, directions.shape).copy()
+    try:
+        locations, ray_ids, _ = intersector.intersects_location(
+            ray_origins=origins, ray_directions=directions, multiple_hits=False,
+        )
+    except ModuleNotFoundError as error:
+        raise RuntimeError(
+            "Trimesh occlusion testing requires its ray dependencies (including rtree). "
+            "Install them in your HKTex environment."
+        ) from error
+    hit_distances = np.linalg.norm(locations - camera, axis=1)
+    tolerance = 1e-6 * mesh_scale + 1e-7 * target_distances[ray_ids]
+    # At a shared vertex/edge, Trimesh may return an adjacent face as the first
+    # hit. The sample is still visible if that hit reaches the sample distance;
+    # requiring face identity would incorrectly reject such boundary samples.
+    is_visible = np.abs(hit_distances - target_distances[ray_ids]) <= tolerance
+    return target_ids[ray_ids[is_visible]].tolist()
 
 
 def perspective_camera_basis(camera_position, camera_look_at):
@@ -398,6 +436,401 @@ def save_raster_png(path, image):
                      + chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b""))
 
 
+def multi_kernel_affected_faces(trainer, density_model, kernel_ids, cutoff, batch_size):
+    """Use the existing vertices+centroid max rule for each requested kernel."""
+    import numpy as np
+    import torch
+
+    mesh = trainer.mesh
+    influences = np.zeros((len(kernel_ids), mesh.N_faces), dtype=np.float32)
+    sample_barys = torch.tensor(
+        [[1., 0., 0.], [0., 1., 0.], [0., 0., 1.], [1./3., 1./3., 1./3.]],
+        device=mesh.verts.device, dtype=mesh.verts.dtype,
+    )
+    with torch.no_grad():
+        try:
+            trainer.prepare_knn(save_barycentric=False)
+            for start in range(0, mesh.N_faces, batch_size):
+                stop = min(start + batch_size, mesh.N_faces)
+                face_ids = torch.arange(start, stop, device=mesh.faces.device)
+                maxima = torch.full((len(kernel_ids), stop - start), -torch.inf,
+                                    device=mesh.verts.device, dtype=mesh.verts.dtype)
+                for sample in sample_barys:
+                    points_info = trainer.model.prepare_points(
+                        mesh=mesh, eigalbo_interp=trainer.eigalbo_interp,
+                        face_ids=face_ids, barys=sample.expand(stop - start, -1).contiguous(),
+                        pts=None,
+                    )
+                    filtered, global_indices = density_model.filtered_kernel_weights(
+                        points_info, trainer.eigalbo_interp
+                    )
+                    for index, kernel_id in enumerate(kernel_ids):
+                        values = torch.where(global_indices == kernel_id, filtered, 0.0).sum(dim=1)
+                        maxima[index] = torch.maximum(maxima[index], values)
+                influences[:, start:stop] = maxima.cpu().numpy()
+        finally:
+            trainer.reset_knn()
+    if not np.isfinite(influences).all():
+        raise ValueError("Nonfinite multi-kernel face influence encountered")
+    return [np.flatnonzero(values > cutoff) for values in influences], influences
+
+
+def evaluate_selected_kernel_colors(trainer, face_buffer, barycentric_buffer,
+                                    kernel_ids, batch_size, patch_masks=None):
+    """Keep full-model top-k and denominator, retaining selected color terms.
+
+    This is the model's blend with nonselected kernel colors zeroed. Optional
+    per-kernel masks also zero color terms outside that kernel's triangle patch.
+    Weights, top-k competition, mean color, clamping, and postprocessing remain
+    those of HeatKernelTextureKNN.diffuse_heat_kernels/forward.
+    """
+    import numpy as np
+    import torch
+
+    covered = face_buffer >= 0
+    face_ids = face_buffer[covered]
+    barys = barycentric_buffer[covered]
+    covered_indices = np.flatnonzero(covered)
+    colors = np.zeros((*face_buffer.shape, trainer.model.out_dim), dtype=np.float32)
+    masks = None if patch_masks is None else [mask[covered] for mask in patch_masks]
+    with torch.no_grad():
+        try:
+            trainer.prepare_knn(save_barycentric=False)
+            for start in range(0, len(face_ids), batch_size):
+                stop = min(start + batch_size, len(face_ids))
+                batch_faces = torch.as_tensor(face_ids[start:stop], device=trainer.mesh.faces.device)
+                batch_barys = torch.as_tensor(barys[start:stop], device=trainer.mesh.verts.device,
+                                             dtype=trainer.mesh.verts.dtype)
+                points = trainer.mesh.barycentric_to_cartesian(
+                    batch_barys, trainer.mesh.get_face_vertices(batch_faces)
+                )
+                points_info = trainer.model.prepare_points(
+                    mesh=trainer.mesh, eigalbo_interp=trainer.eigalbo_interp,
+                    face_ids=batch_faces, barys=None, pts=points,
+                )
+                # The library performs the original outer-KNN heat/filter and
+                # inner-top-k selection; returned weights are unnormalized.
+                _, _, topk_ids, topk_weights = trainer.model.diffuse_heat_kernels(
+                    eigalbo_interp=trainer.eigalbo_interp, pts_info=points_info
+                )
+                ids = topk_ids.squeeze(-1).transpose(0, 1)
+                weights = topk_weights.squeeze(-1).transpose(0, 1)
+                selected = torch.zeros_like(ids, dtype=torch.bool)
+                for index, kernel_id in enumerate(kernel_ids):
+                    matches = ids == kernel_id
+                    if masks is not None:
+                        enabled = torch.as_tensor(masks[index][start:stop], device=ids.device)
+                        matches &= enabled[:, None]
+                    selected |= matches
+                contribution_colors = weights.unsqueeze(-1) * trainer.model.kernel_colours[ids]
+                contribution_colors = torch.where(selected.unsqueeze(-1), contribution_colors, 0.0)
+                # Exact equation from HeatKernelTextureKNN: all top-k weights
+                # participate in normalization, even when their colors are zero.
+                batch_colors = contribution_colors.sum(dim=1) / torch.clamp(
+                    weights.sum(dim=1, keepdim=True), min=1.0
+                )
+                batch_colors = (trainer.model._mean_colour + batch_colors).clamp(0.0, 1.0)
+                batch_colors = trainer.model(batch_colors)
+                colors.reshape(-1, trainer.model.out_dim)[covered_indices[start:stop]] = batch_colors.cpu().numpy()
+        finally:
+            trainer.reset_knn()
+    if not np.isfinite(colors).all():
+        raise ValueError("Nonfinite multi-kernel colors encountered")
+    return colors
+
+
+def find_visible_kernels(trainer, density_model, mesh, args):
+    """Scan all trained sources, reusing footprint and camera visibility tests."""
+    import numpy as np
+
+    total_kernels = trainer.model.N_sources
+    # Visibility is a property of a face and this camera, independent of kernel.
+    # Use the same full-mesh seven-sample occlusion test once for all face IDs.
+    camera_visible_faces = visible_affected_faces(
+        mesh, np.arange(len(mesh.faces)), args.camera_position,
+        args.camera_look_at, args.batch_size,
+    )
+    visible_kernel_ids, affected_sets, visible_sets, maximum_influences = [], [], [], []
+    source_faces = trainer.model._kernel_face_ids.detach().cpu().numpy()
+    # Bound the dense kernel-by-face influence array used by the existing helper.
+    # Limit each group to roughly 64 MiB of host influence storage, up to 64 IDs.
+    group_size = max(1, min(64, (64 * 1024 * 1024) // max(4 * len(mesh.faces), 1)))
+    for start in range(0, total_kernels, group_size):
+        kernel_ids = list(range(start, min(start + group_size, total_kernels)))
+        local_faces, influences = multi_kernel_affected_faces(
+            trainer, density_model, kernel_ids, args.cutoff, args.batch_size
+        )
+        for index, (kernel_id, affected) in enumerate(zip(kernel_ids, local_faces)):
+            # Both arrays contain original global face IDs. Intersection preserves
+            # exactly the per-kernel visibility test while eliminating duplicates.
+            visible = np.intersect1d(affected, camera_visible_faces)
+            print(f"Kernel {kernel_id}: affected={len(affected)}, visible={len(visible)}, "
+                  f"source_face={int(source_faces[kernel_id])}")
+            if not len(visible):
+                continue
+            visible_kernel_ids.append(kernel_id)
+            affected_sets.append(affected)
+            visible_sets.append(visible)
+            maximum_influences.append(float(influences[index].max()))
+    print(f"Visible kernels: {len(visible_kernel_ids)} / {total_kernels}")
+    print(f"Total model kernels: {total_kernels}")
+    print(f"Number of camera-relevant kernels: {len(visible_kernel_ids)}")
+    print(f"visible_kernel_ids: {visible_kernel_ids}")
+    return visible_kernel_ids, affected_sets, visible_sets, maximum_influences
+
+
+def debug_missing_coverage(trainer, args, reference_faces, patch_covered,
+                           reference_colors, kernel_ids, affected_sets, visible_union):
+    """Report missing coverage without changing any selection or render buffers."""
+    import numpy as np
+
+    reference_visible = reference_faces >= 0
+    missing_mask = reference_visible & ~patch_covered
+    rows, columns = np.nonzero(missing_mask)
+    print(f"Missing coverage pixel count: {len(rows)}")
+    print("Missing pixel coordinates (x, y; origin at top-left): "
+          f"{list(zip(columns.tolist(), rows.tolist()))}")
+    selected_ids = set(kernel_ids)
+    affected_union = set(int(face) for faces in affected_sets for face in faces)
+    visible_face_union = set(int(face) for face in visible_union)
+    source_face_ids = trainer.model._kernel_face_ids.detach().cpu().numpy()
+    print("_kernel_face_ids associates kernels with their source face, not their full affected footprint.")
+    for y, x in zip(rows, columns):
+        face_id = int(reference_faces[y, x])
+        source_kernels = np.flatnonzero(source_face_ids == face_id).tolist()
+        footprint_kernels = [kernel_id for kernel_id, faces in zip(kernel_ids, affected_sets)
+                             if face_id in faces]
+        print(f"Missing pixel (x={int(x)}, y={int(y)}): reference face ID={face_id}")
+        print(f"  Source-face kernels (_kernel_face_ids): {source_kernels}")
+        for kernel_id in source_kernels:
+            print(f"  Kernel {kernel_id}: selected={kernel_id in selected_ids}; "
+                  f"selected by --all-visible-kernels={bool(args.all_visible_kernels and kernel_id in selected_ids)}")
+        print(f"  In union of selected affected faces: {face_id in affected_union}")
+        print(f"  Selected kernels whose affected footprint contains face: {footprint_kernels}")
+        print(f"  In union of selected visible faces: {face_id in visible_face_union}")
+    debug_image = np.rint(np.clip(reference_colors, 0.0, 1.0) * 255.0).astype(np.uint8)
+    debug_image[missing_mask] = [255, 0, 255]
+    output_path = REPO_ROOT / "outputs/kernel_face_debug/missing_coverage.png"
+    save_raster_png(output_path, debug_image)
+    print(f"Exported missing coverage debug (magenta pixels): {output_path}")
+
+
+def report_uncovered_reference_pixels(reference_faces, reference_barys, reference_colors,
+                                      patch_covered, kernel_ids, affected_sets, visible_union):
+    """Diagnose gaps using existing buffers; leave all rendering data untouched."""
+    import numpy as np
+
+    reference_visible = reference_faces >= 0
+    missing_mask = reference_visible & ~patch_covered
+    rows, columns = np.nonzero(missing_mask)
+    affected_union = set(int(face) for faces in affected_sets for face in faces)
+    visible_faces = set(int(face) for face in visible_union)
+    missing_faces = set(int(face) for face in reference_faces[missing_mask])
+    face_kernels = {face: [] for face in missing_faces}
+    for kernel_id, affected in zip(kernel_ids, affected_sets):
+        for face in missing_faces.intersection(int(face) for face in affected):
+            face_kernels[face].append(kernel_id)
+    counts = dict.fromkeys((
+        "face_not_selected", "face_selected_but_not_visible",
+        "face_visible_but_not_rasterized", "other",
+    ), 0)
+    print(f"Uncovered reference mesh-visible pixels: {len(rows)}")
+    print("Uncovered pixel coordinates use (x, y), with origin at the top-left.")
+    for y, x in zip(rows, columns):
+        face_id = int(reference_faces[y, x])
+        barys = reference_barys[y, x]
+        rgb = reference_colors[y, x]
+        if not (np.isfinite(barys).all() and np.isfinite(rgb).all()):
+            category = "other"
+        elif face_id not in affected_union:
+            category = "face_not_selected"
+        elif face_id not in visible_faces:
+            category = "face_selected_but_not_visible"
+        else:
+            category = "face_visible_but_not_rasterized"
+        counts[category] += 1
+        print(f"Uncovered pixel (x={int(x)}, y={int(y)}): reference face ID={face_id}")
+        print(f"  Reference barycentric coordinates: {barys.tolist()}")
+        print(f"  Reference RGB: {rgb.tolist()}")
+        print(f"  Face in total unique visible affected faces: {face_id in visible_faces}")
+        print(f"  Selected kernels with face in affected-face set: {face_kernels[face_id]}")
+        print(f"  Category: {category}")
+    print("Uncovered pixel category counts:")
+    for category, count in counts.items():
+        print(f"  {category}: {count}")
+    # A subdued reference silhouette ensures only uncovered pixels are bright.
+    # This is a fresh buffer; the reference render and its PNG remain unchanged.
+    image = np.zeros((*reference_faces.shape, 3), dtype=np.uint8)
+    image[reference_visible] = [55, 55, 55]
+    image[missing_mask] = [255, 0, 255]
+    path = REPO_ROOT / "outputs/kernel_face_debug/multi_kernel_uncovered.png"
+    save_raster_png(path, image)
+    print(f"Exported uncovered reference silhouette (magenta gaps): {path}")
+
+
+def run_multi_kernel(trainer, density_model, args):
+    """Render each kernel patch and compare their blend to full-mesh first hits."""
+    import numpy as np
+    import torch
+    import trimesh
+
+    if (trainer.model.cfg.knn_outer_k, trainer.model.cfg.knn_inner_k) != (50, 30):
+        raise ValueError("Multi-kernel comparison expects the trained outer KNN=50 and inner top-k=30")
+    if trainer.model.out_dim != 3:
+        raise ValueError("Multi-kernel PNG rendering requires three output color channels")
+    vertices = trainer.mesh.verts.detach().cpu().numpy()
+    faces = trainer.mesh.faces.detach().cpu().numpy()
+    mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
+    if args.all_visible_kernels:
+        kernel_ids, affected_sets, precomputed_visible, maximum_influences = find_visible_kernels(
+            trainer, density_model, mesh, args
+        )
+    else:
+        kernel_ids = args.kernel_ids
+        affected_sets, influences = multi_kernel_affected_faces(
+            trainer, density_model, kernel_ids, args.cutoff, args.batch_size
+        )
+        precomputed_visible = None
+        maximum_influences = [float(values.max()) for values in influences]
+    visible_sets, patch_faces, patch_depths = [], [], []
+    for index, (kernel_id, affected) in enumerate(zip(kernel_ids, affected_sets)):
+        visible = (precomputed_visible[index] if precomputed_visible is not None
+                   else visible_affected_faces(
+                       mesh, affected, args.camera_position, args.camera_look_at, args.batch_size
+                   ))
+        _, depth, _, face_ids, barys = rasterize_visible_triangles(
+            vertices, faces, visible, args.camera_position, args.camera_look_at,
+            args.image_width, args.image_height, args.fov_y,
+        )
+        covered, values = evaluate_raster_kernel(
+            trainer, density_model, face_ids, barys, kernel_id, args.batch_size
+        )
+        visible_sets.append(visible)
+        patch_faces.append(face_ids)
+        patch_depths.append(depth)
+        print(f"Kernel {kernel_id}: affected={len(affected)}, visible={len(visible)}, "
+              f"pixels={int(covered.sum())}, maximum face sample influence={maximum_influences[index]:.9g}")
+        if len(values):
+            print(f"  Pixel influence min/max/mean: {values.min():.9g} / {values.max():.9g} / {values.mean():.9g}")
+    visible_union = (np.unique(np.concatenate(visible_sets)) if visible_sets
+                     else np.empty(0, dtype=np.int64))
+    patch_image, union_depth, _, union_faces, union_barys = rasterize_visible_triangles(
+        vertices, faces, visible_union, args.camera_position, args.camera_look_at,
+        args.image_width, args.image_height, args.fov_y,
+    )
+    union_covered = union_faces >= 0
+    # A kernel may contribute only where its own patch covers the union's
+    # winning surface. Several masks may be true at the same pixel.
+    patch_masks = []
+    scale = max(float(np.linalg.norm(mesh.extents)), np.finfo(float).eps)
+    for face_ids, depth in zip(patch_faces, patch_depths):
+        patch_masks.append(union_covered & (face_ids == union_faces)
+                           & np.isclose(depth, union_depth, rtol=1e-6, atol=scale * 1e-6))
+    patch_colors = evaluate_selected_kernel_colors(
+        trainer, union_faces, union_barys, kernel_ids, args.batch_size, patch_masks
+    )
+    reference_faces, reference_barys, _ = reference_mesh_surface(
+        mesh, args.camera_position, args.camera_look_at,
+        args.image_width, args.image_height, args.fov_y, args.batch_size,
+    )
+    reference_colors = evaluate_selected_kernel_colors(
+        trainer, reference_faces, reference_barys, kernel_ids, args.batch_size
+    )
+    mesh_visible = reference_faces >= 0
+    outside_patch = mesh_visible & ~union_covered
+    if args.all_visible_kernels:
+        report_uncovered_reference_pixels(
+            reference_faces, reference_barys, reference_colors, union_covered,
+            kernel_ids, affected_sets, visible_union,
+        )
+    if args.debug_missing_coverage:
+        debug_missing_coverage(
+            trainer, args, reference_faces, union_covered, reference_colors,
+            kernel_ids, affected_sets, visible_union,
+        )
+    # Zero kernel color contribution still receives the trained mean, followed
+    # by the same clamp and model postprocessing as the normal HKTex blend.
+    # Fill only uncovered mesh pixels; actual background remains black.
+    with torch.no_grad():
+        mean_color = trainer.model._mean_colour.detach().cpu().numpy().reshape(-1)
+        base_color = trainer.model(
+            trainer.model._mean_colour.clamp(0.0, 1.0)
+        ).detach().cpu().numpy().reshape(-1)
+    patch_colors[outside_patch] = base_color
+    print(f"Model _mean_colour RGB: {mean_color.tolist()}")
+    print(f"HKTex zero-contribution base RGB (clamped/postprocessed): {base_color.tolist()}")
+    if outside_patch.any():
+        outside_reference_mean = reference_colors[outside_patch].mean(axis=0, dtype=np.float64)
+        mean_matches = np.allclose(mean_color, outside_reference_mean, rtol=1e-5, atol=1e-6)
+        base_matches = np.allclose(base_color, outside_reference_mean, rtol=1e-5, atol=1e-6)
+        print(f"Outside-patch reference mean RGB: {outside_reference_mean.tolist()}")
+        print(f"Model mean colour matches outside-patch reference mean RGB: {bool(mean_matches)}")
+        print(f"Postprocessed base matches outside-patch reference mean RGB: {bool(base_matches)}")
+        print(f"Outside-patch reference deviation from base (max absolute): "
+              f"{np.abs(reference_colors[outside_patch] - base_color).max():.9g}")
+    else:
+        print("Model mean colour matches outside-patch reference mean RGB: N/A (empty region)")
+    differences = np.abs(patch_colors - reference_colors)
+    masked_diff = np.zeros_like(differences)
+    masked_diff[mesh_visible] = differences[mesh_visible]
+    output_dir = REPO_ROOT / "outputs/kernel_face_debug"
+    for name, image in (
+        ("multi_kernel_patch", patch_image),
+        ("multi_kernel_render", np.rint(np.clip(patch_colors, 0, 1) * 255).astype(np.uint8)),
+        ("multi_kernel_reference", np.rint(np.clip(reference_colors, 0, 1) * 255).astype(np.uint8)),
+        ("multi_kernel_diff", np.rint(np.clip(masked_diff, 0, 1) * 255).astype(np.uint8)),
+    ):
+        path = output_dir / f"{name}.png"
+        save_raster_png(path, image)
+        print(f"Exported: {path}")
+    print("Footprint mode: vertices+centroid")
+    print(f"Number of kernels: {len(kernel_ids)}")
+    print(f"Affected face memberships (sum across kernels): {sum(len(ids) for ids in affected_sets)}")
+    print(f"Total affected faces summed across selected kernels: {sum(len(ids) for ids in affected_sets)}")
+    unique_affected_count = len(np.unique(np.concatenate(affected_sets))) if affected_sets else 0
+    print(f"Total unique affected faces: {unique_affected_count}")
+    print(f"Total unique visible faces: {len(visible_union)}")
+    print(f"Total unique visible affected faces: {len(visible_union)}")
+    print(f"Rasterized pixel count: {int(union_covered.sum())}")
+    print(f"Reference mesh-visible pixels: {int(mesh_visible.sum())}")
+    if mesh_visible.any():
+        mesh_visible_patch_pixels = int((union_covered & mesh_visible).sum())
+        coverage = mesh_visible_patch_pixels / int(mesh_visible.sum())
+        print(f"Mesh-visible pixels covered by selected patch union: {mesh_visible_patch_pixels}")
+        print(f"Visible pixel coverage: {100.0 * coverage:.6f}%")
+    else:
+        print("Visible pixel coverage: N/A (no reference mesh-visible pixels)")
+    print("Blend uses full-model outer KNN=50, inner top-k=30, and denominator; only selected color terms remain.")
+    print("Metrics use unquantized RGB values over mesh-visible pixels/channels; background is excluded.")
+    if mesh_visible.any():
+        errors = differences[mesh_visible]
+        print(f"MAE: {errors.mean():.9g}")
+        print(f"RMSE: {np.sqrt(np.mean(errors ** 2)):.9g}")
+        print(f"Max absolute error: {errors.max():.9g}")
+    else:
+        print("MAE / RMSE / max absolute error: N/A (no mesh-visible pixels)")
+
+    # Diagnostic only: partition the existing comparison mask by patch coverage.
+    # Use unquantized RGB, with equal weight for every pixel and color channel.
+    for region_name, region_mask in (
+        ("inside_patch", mesh_visible & union_covered),
+        ("outside_patch", mesh_visible & ~union_covered),
+    ):
+        pixel_count = int(region_mask.sum())
+        print(f"{region_name} pixel count: {pixel_count}")
+        if pixel_count:
+            region_errors = differences[region_mask]
+            print(f"{region_name} MAE: {region_errors.mean():.9g}")
+            print(f"{region_name} RMSE: {np.sqrt(np.mean(region_errors ** 2)):.9g}")
+            print(f"{region_name} max absolute error: {region_errors.max():.9g}")
+            print(f"{region_name} multi-kernel render mean RGB: {patch_colors[region_mask].mean(axis=0).tolist()}")
+            print(f"{region_name} reference mean RGB: {reference_colors[region_mask].mean(axis=0).tolist()}")
+        else:
+            print(f"{region_name} MAE / RMSE / max absolute error: N/A (empty region)")
+            print(f"{region_name} multi-kernel render mean RGB: N/A (empty region)")
+            print(f"{region_name} reference mean RGB: N/A (empty region)")
+
+
 def main():
     args = parse_args()
     # Experiment paths are relative to the repository, as in the training entrypoint.
@@ -431,7 +864,10 @@ def main():
     checkpoint = args.experiment / "ckpts" / cfg.optim.save_model_name
     trainer.model.load_torch(str(checkpoint))
     trainer.model.eval()
-    if args.kernel_id >= trainer.model.N_sources:
+    requested_ids = [] if args.all_visible_kernels else (
+        args.kernel_ids if args.kernel_ids is not None else [args.kernel_id]
+    )
+    if any(kernel_id >= trainer.model.N_sources for kernel_id in requested_ids):
         raise ValueError(f"Kernel ID must be below {trainer.model.N_sources}")
 
     density_model = HeatKernelDensityKNN(
@@ -443,6 +879,10 @@ def main():
     # uses the default 1. Reject other experiments rather than silently diverge.
     if trainer.model.cfg.power_diffused_diracs != 1:
         raise ValueError("filtered_kernel_weights requires power_diffused_diracs=1 for parity")
+
+    if args.kernel_ids is not None or args.all_visible_kernels:
+        run_multi_kernel(trainer, density_model, args)
+        return
 
     mesh = trainer.mesh
     source_face = int(trainer.model.kernel_face_ids[args.kernel_id].item())
@@ -540,7 +980,7 @@ def main():
     )
     occluded = np.setdiff1d(affected, visible)
     print(f"Camera position: {args.camera_position}; look-at: {args.camera_look_at}")
-    print("Visibility tests triangle centroids against the full opaque mesh, two-sided.")
+    print("Visibility tests triangle vertices, edge midpoints, and centroid against the full opaque mesh, two-sided.")
     print("Behind-camera faces are included in the occluded group; no FOV limit is applied.")
     print(f"Affected face count: {len(affected)}")
     print(f"Visible affected face count: {len(visible)}")
