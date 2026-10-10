@@ -98,6 +98,92 @@ python optimisation.py \
 
 Use `--gpu 0` to choose a GPU, or set `CUDA_VISIBLE_DEVICES` before launching the command.
 
+## Triangle-Based Heat Kernel Splatting
+
+This fork adds an extension that renders trained HKTex heat kernels using triangles of a connected mesh. It loads the trained model and evaluated mesh from an experiment, selects kernel-supported triangles, and produces a splat image alongside an HKTex reference image.
+
+### 1. Set up the environment
+
+Follow the **HKTex** installation instructions above, including Mitsuba, FAISS GPU, Trimesh/rtree, and Pillow. Add Numba to that environment:
+
+```bash
+mamba activate hktex
+python -m pip install numba==0.61.2
+```
+
+Run the following commands from the repository root in the same terminal. An NVIDIA GPU with a compatible CUDA driver is still required for model loading and heat-kernel evaluation; the Numba visibility rasterizer runs on the CPU. The examples use `--gpu 0`; an existing nonempty `CUDA_VISIBLE_DEVICES` setting takes precedence.
+
+### 2. Prepare a trained experiment
+
+Supply your own connected, textured triangle mesh, including any external texture files. Mesh assets and trained checkpoints are not bundled in this repository. Replace the mesh path below with your file, then train using the supplied KNN configuration:
+
+```bash
+MESH="data/my_connected_mesh.glb"
+
+python optimisation.py \
+  --config configs/texture_hktex_knn.yaml \
+  --gpu 0 \
+  data.mesh_path="$MESH" \
+  tag=triangle_splat_example \
+  use_timestamp=false \
+  optim.save_model=true \
+  optim.save_model_name=model.pt
+```
+
+After successful completion, the experiment directory `outputs/uv-texture-fitting/triangle_splat_example/` contains `configs/parsed.yaml` and `ckpts/model.pt`. Keep the mesh and its textures at the paths recorded in the saved configuration. The standard training configuration also generates a matching `<mesh-stem>_eigen_albo_principal_curvatures.pt` file beside the mesh when absent; keep this precomputation with the mesh.
+
+If you already have a trained experiment, skip training and set `EXPERIMENT` below to its directory. It must contain the saved configuration and `ckpts/<optim.save_model_name>`; its saved mesh paths must resolve on your machine. The renderer requires outer KNN 50, inner KNN 30, three RGB channels, and `power_diffused_diracs=1`; the configuration above provides these settings.
+
+### 3. Generate or load the kernel-to-face cache
+
+The cache records which mesh faces each trained kernel affects. Generate it once for your experiment and support cutoff:
+
+```bash
+EXPERIMENT="outputs/uv-texture-fitting/triangle_splat_example"
+CACHE="outputs/triangle_splat/triangle_splat_example_cutoff_0.005.npz"
+CUTOFF=0.005
+
+python scripts/triangle_splat_renderer.py \
+  --experiment "$EXPERIMENT" \
+  --kernel-face-cache "$CACHE" \
+  --cutoff "$CUTOFF" \
+  --precompute-cache \
+  --gpu 0
+```
+
+If you already have a matching cache, set `CACHE` to its `.npz` path and skip the precomputation command. Use the same cutoff when rendering. Regenerate the cache if the checkpoint, mesh, saved configuration, or cutoff changes; changing only the camera does not require a new cache.
+
+### 4. Render with the Numba backend
+
+```bash
+python scripts/triangle_splat_renderer.py \
+  --experiment "$EXPERIMENT" \
+  --kernel-face-cache "$CACHE" \
+  --cutoff "$CUTOFF" \
+  --visibility-mode raster \
+  --raster-backend numba \
+  --splat-raster-mode reuse \
+  --camera-position 0 3 0 \
+  --camera-look-at 0 0 0 \
+  --image-width 128 \
+  --image-height 128 \
+  --fov-y 45 \
+  --gpu 0
+```
+
+Set `--camera-position` and `--camera-look-at` in the evaluated mesh's coordinates. Change `--image-width` and `--image-height` for the output resolution, and `--fov-y` for the vertical field of view in degrees. `--cutoff` controls the kernel support used to select triangles; lowering it includes more faces.
+
+### 5. Find the images
+
+Images are written to `outputs/triangle_splat/`:
+
+- `splat_render.png`: triangle-based heat-kernel splat image.
+- `reference.png`: ray-rendered HKTex reference image using the selected kernels.
+- `diff.png`: absolute RGB difference image.
+- `triangle_mask.png`: green pixels showing the splat's triangle coverage.
+
+Each rendering run overwrites these four images.
+
 ## Configurations and experiments
 
 The main experiment families are defined in [`configs/`](configs/):
