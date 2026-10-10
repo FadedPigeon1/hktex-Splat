@@ -37,9 +37,21 @@ def parse_args():
                         default=[0.0, 0.0, 0.0], metavar=("X", "Y", "Z"))
     parser.add_argument("--image-width", type=int, default=128)
     parser.add_argument("--image-height", type=int, default=128)
+    parser.add_argument("--display-background", choices=("black", "white", "checker"),
+                        default="black", help="Background for saved visualization PNGs only (default: black)")
     parser.add_argument("--fov-y", type=float, default=45.0)
     parser.add_argument("--visibility-mode", choices=("raster", "samples"), default="raster",
                         help="Visibility from pixel-center z-buffer winners (default) or seven surface samples")
+    parser.add_argument("--raster-backend", choices=("numpy", "numba"), default="numpy",
+                        help="Full-mesh visibility rasterizer; NumPy remains the reference/fallback")
+    parser.add_argument("--compare-raster-backends", action="store_true",
+                        help="Validate NumPy/Numba full frames and measure both warmed paths")
+    parser.add_argument("--allow-rgb-mismatch", action="store_true",
+                        help="Finish backend benchmarks with RGB parity marked FAILED; raster/support failures stay fatal")
+    parser.add_argument("--trace-color-evaluation", action="store_true",
+                        help="Capture actual color intermediates and prepared-state changes during backend comparison")
+    parser.add_argument("--raster-backend-report", type=Path,
+                        help="JSON results for --compare-raster-backends")
     parser.add_argument("--compare-visibility", action="store_true",
                         help="Also run the alternate full-mesh visibility test and report differences; adds validation cost")
     parser.add_argument("--splat-raster-mode", choices=("reuse", "separate"), default="reuse",
@@ -47,7 +59,7 @@ def parse_args():
     parser.add_argument("--validate-raster-reuse", action="store_true",
                         help="Compare reused surface buffers with a separate selected-triangle raster; adds validation cost")
     parser.add_argument("--benchmark-runs", type=int, default=1,
-                        help="Steady-state evaluation repetitions on the same raster buffers and prepared KNN cache")
+                        help="Full steady-state splat and reference frame repetitions using prepared KNN state")
     parser.add_argument("--experiment", type=Path, default=DEFAULT_EXPERIMENT)
     parser.add_argument("--gpu", default="0", help="CUDA_VISIBLE_DEVICES if unset")
     parser.add_argument("--precompute-cache", action="store_true",
@@ -55,6 +67,16 @@ def parse_args():
     parser.add_argument("--kernel-face-cache", type=Path,
                         help="Explicit footprint cache; otherwise use the default cutoff cache if present")
     args = parser.parse_args()
+    if args.compare_raster_backends and (args.visibility_mode != "raster" or args.precompute_cache):
+        parser.error("--compare-raster-backends requires raster visibility and rendering mode")
+    if args.trace_color_evaluation and not args.compare_raster_backends:
+        parser.error("--trace-color-evaluation requires --compare-raster-backends")
+    if args.allow_rgb_mismatch and not args.compare_raster_backends:
+        parser.error("--allow-rgb-mismatch requires --compare-raster-backends")
+    if args.raster_backend_report is not None and not args.compare_raster_backends:
+        parser.error("--raster-backend-report requires --compare-raster-backends")
+    if args.raster_backend_report is not None:
+        args.raster_backend_report = args.raster_backend_report.resolve()
     if not math.isfinite(args.cutoff) or args.cutoff < 0:
         parser.error("--cutoff must be finite and nonnegative")
     if args.batch_size < 1:
@@ -75,6 +97,25 @@ def parse_args():
         if args.kernel_face_cache.suffix.lower() != ".npz":
             parser.error("--kernel-face-cache must end in .npz")
     return args
+
+
+def display_background(image, covered, background):
+    """Copy a uint8 visualization and fill only uncovered pixels for PNG export."""
+    import numpy as np
+
+    result = image.copy()
+    if background == "black":
+        return result
+    if background == "white":
+        result[~covered] = 255
+    elif background == "checker":
+        # Eight-pixel squares, with neutral grays to distinguish coverage holes.
+        y, x = np.indices(covered.shape)
+        checker = np.where((x // 8 + y // 8) % 2 == 0, 192, 128).astype(np.uint8)
+        result[~covered] = checker[~covered, None]
+    else:
+        raise ValueError(f"Unknown display background: {background}")
+    return result
 
 
 def default_cache_path(cutoff):
@@ -174,14 +215,55 @@ def load_kernel_face_cache(path, cutoff, identity):
     return affected_sets
 
 
-class RasterVisibilityTiming:
-    """CPU wall times for the existing NumPy rasterizer; no nested double count."""
+def prepare_raster_backend(args, raster_geometry):
+    """Import/compile the tested CPU kernel before any frame timing; fail to NumPy."""
+    startup = {"import_setup_s": 0.0, "jit_compilation_s": 0.0, "total_s": 0.0}
+    if getattr(args, "raster_backend", "numpy") != "numba":
+        return startup
+    start = time.perf_counter()
+    compile_start = None
+    try:
+        from numba import typeof
+        from test_numba_raster import _kernel_args, _raster_kernel, rasterize_numba
 
-    def __init__(self):
+        vertices, faces = raster_geometry
+        import numpy as np
+        example = _kernel_args(
+            vertices, faces, np.arange(len(faces), dtype=np.int64),
+            args.camera_position, args.camera_look_at,
+            args.image_width, args.image_height, args.fov_y,
+        )
+        signature = tuple(typeof(value) for value in example)
+        compile_start = time.perf_counter()
+        startup["import_setup_s"] = compile_start - start
+        _raster_kernel.compile(signature)  # Compiles without executing a raster.
+        startup["jit_compilation_s"] = time.perf_counter() - compile_start
+        args._numba_raster = rasterize_numba
+    except Exception as error:
+        if compile_start is not None:
+            startup["jit_compilation_s"] = time.perf_counter() - compile_start
+        else:
+            startup["import_setup_s"] = time.perf_counter() - start
+        args._raster_backend_fallback = f"{type(error).__name__}: {error}"
+        args.raster_backend = "numpy"
+        print(f"Numba backend unavailable; using validated NumPy: {args._raster_backend_fallback}")
+    startup["total_s"] = time.perf_counter() - start
+    return startup
+
+
+class RasterVisibilityTiming:
+    """CPU wall times for the selected rasterizer; no nested double count."""
+
+    def __init__(self, enabled=True, backend="numpy"):
+        self.enabled = enabled
+        self.backend = backend
         self.times = {}
 
     @contextmanager
     def stage(self, name):
+        if not self.enabled:
+            yield
+            return
         start = time.perf_counter()
         try:
             yield
@@ -198,7 +280,7 @@ class RasterVisibilityTiming:
         print(f"  Measured operation sub-step sum: {subtotal:.6f} s")
         print(f"  Python loops / batching / timer overhead (remainder): {overhead:.6f} s")
         print(f"  Accounted sum including remainder: {subtotal + overhead:.6f} s")
-        print(f"  Existing raster visibility time: {total:.6f} s")
+        print(f"  Raster visibility time ({self.backend}): {total:.6f} s")
         print(f"  Operation sum close to total (within 5% or 5 ms): {abs(overhead) <= max(0.005, 0.05 * total)}")
         print("  Repeated CPU timing scopes add overhead; no raster algorithm/quality changes.")
 
@@ -338,11 +420,21 @@ def raster_visible_face_mask(mesh, args, retain_buffers=False, raster_geometry=N
         if torch.cuda.is_available():
             torch.cuda.synchronize()
     vertices, faces = (mesh.vertices, mesh.faces) if raster_geometry is None else raster_geometry
-    _, depth, _, winning_faces, barycentrics = profiled_visibility_raster(
-        vertices, faces, np.arange(len(faces)),
-        args.camera_position, args.camera_look_at,
-        args.image_width, args.image_height, args.fov_y, timing,
-    )
+    inputs = (vertices, faces, np.arange(len(faces)), args.camera_position,
+              args.camera_look_at, args.image_width, args.image_height, args.fov_y)
+    result = None
+    if getattr(args, "raster_backend", "numpy") == "numba":
+        try:
+            with timing.stage("Numba CPU raster call (setup, clipping, buffers)"):
+                result = args._numba_raster(*inputs)
+        except Exception as error:
+            args._raster_backend_fallback = f"{type(error).__name__}: {error}"
+            args.raster_backend = "numpy"
+            print(f"Numba raster failed; using validated NumPy: {args._raster_backend_fallback}")
+    if result is None:
+        result = profiled_visibility_raster(*inputs, timing)
+    timing.backend = getattr(args, "raster_backend", "numpy")
+    _, depth, _, winning_faces, barycentrics = result
     with timing.stage("Final visible-face extraction"):
         visible_face_mask = np.zeros(len(mesh.faces), dtype=bool)
         visible_face_mask[np.unique(winning_faces[winning_faces >= 0])] = True
@@ -369,7 +461,8 @@ def sample_visible_face_mask(mesh, face_ids, args):
     return mask
 
 
-def filter_cached_kernel_visibility(mesh, affected_sets, args, raster_geometry=None):
+def filter_cached_kernel_visibility(mesh, affected_sets, args, raster_geometry=None,
+                                    benchmark=False):
     """Select kernels by a shared face mask from the requested visibility mode."""
     import numpy as np
 
@@ -381,18 +474,19 @@ def filter_cached_kernel_visibility(mesh, affected_sets, args, raster_geometry=N
     raster_buffers = None
     raster_visibility_time = 0.0
     if args.visibility_mode == "raster":
-        raster_profiling = RasterVisibilityTiming()
+        raster_profiling = RasterVisibilityTiming(enabled=not benchmark)
         raster_start = time.perf_counter()
         raster_mask, raster_buffers = raster_visible_face_mask(
             mesh, args, retain_buffers=True, raster_geometry=raster_geometry,
             profiling=raster_profiling,
         )
         raster_visibility_time = time.perf_counter() - raster_start
-        raster_profiling.report(raster_visibility_time)
+        if not benchmark:
+            raster_profiling.report(raster_visibility_time)
         face_visibility = raster_mask
     else:
         # Full-mesh samples are needed only for a full-mesh mode comparison.
-        sample_faces = np.arange(len(mesh.faces)) if args.compare_visibility else affected_union
+        sample_faces = np.arange(len(mesh.faces)) if args.compare_visibility and not benchmark else affected_union
         sample_mask = sample_visible_face_mask(mesh, sample_faces, args)
         face_visibility = sample_mask
     determination_time = time.perf_counter() - determination_start
@@ -403,6 +497,8 @@ def filter_cached_kernel_visibility(mesh, affected_sets, args, raster_geometry=N
         if len(visible):
             kernel_ids.append(kernel_id)
             visible_sets.append(visible)
+    if benchmark:
+        return kernel_ids, visible_sets, raster_buffers, raster_visibility_time
     print(f"Visible kernels: {len(kernel_ids)} / {len(affected_sets)}")
     print(f"Visibility mode: {args.visibility_mode}")
     print(f"Mesh triangle count: {len(mesh.faces)}")
@@ -489,6 +585,9 @@ class KernelEvaluationTiming:
     @contextmanager
     def library_hooks(self, trainer):
         """Observe original library calls/scopes temporarily; preserve their results."""
+        if not self.enabled:
+            yield
+            return
         import torch
 
         scopes = {
@@ -658,7 +757,41 @@ def profiled_selected_kernel_colors(trainer, face_buffer, barycentric_buffer,
     return colors
 
 
+def render_splat_frame(mesh, affected_sets, args, raster_geometry, trainer,
+                       gating_lookup, timing, force_separate=False):
+    """Shared warmed frame path; preserve filtering, safe reuse and color evaluation."""
+    import numpy as np
+    from visualize_kernel_faces import rasterize_visible_triangles
+
+    vertices, faces = raster_geometry
+    kernel_ids, visible_sets, visibility, _ = filter_cached_kernel_visibility(
+        mesh, affected_sets, args, raster_geometry=raster_geometry, benchmark=True,
+    )
+    union = (np.unique(np.concatenate(visible_sets)) if visible_sets
+             else np.empty(0, dtype=np.int64))
+    buffers = None
+    if args.splat_raster_mode == "reuse" and visibility is not None and not force_separate:
+        buffers = reuse_selected_raster_buffers(visibility, union, len(faces))
+    reused = buffers is not None
+    if buffers is None:
+        mask, depth, _, face_ids, barys = rasterize_visible_triangles(
+            vertices, faces, union, args.camera_position, args.camera_look_at,
+            args.image_width, args.image_height, args.fov_y,
+        )
+        buffers = mask, depth, face_ids, barys
+    _, _, face_ids, barys = buffers
+    colors = profiled_selected_kernel_colors(
+        trainer, face_ids, barys, kernel_ids, args.batch_size,
+        None, timing, manage_knn_cache=False, gating_lookup=gating_lookup,
+        covered_mask=face_ids >= 0,
+    )
+    return {"kernel_ids": kernel_ids, "visible_sets": visible_sets,
+            "visibility": visibility, "buffers": buffers, "colors": colors,
+            "reused": reused}
+
+
 def main():
+    loading_start = time.perf_counter()
     args = parse_args()
     os.chdir(REPO_ROOT)
     sys.path.insert(0, str(REPO_ROOT))
@@ -705,6 +838,9 @@ def main():
     vertices = trainer.mesh.verts.detach().cpu().numpy()
     faces = trainer.mesh.faces.detach().cpu().numpy()
     mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
+    if torch.cuda.is_available():
+        torch.cuda.synchronize(trainer.mesh.verts.device)
+    loading_time = time.perf_counter() - loading_start
 
     # Synchronize around timings so asynchronous CUDA work is included.
     def synchronize():
@@ -739,6 +875,22 @@ def main():
         print(f"SLOW PATH: no default footprint cache at {cache_path}; recomputing kernel footprints.")
         print("Run --precompute-cache once to remove footprint discovery from subsequent renders.")
         density_model = make_density_model()
+
+    requested_backend = args.raster_backend
+    backend_startup = prepare_raster_backend(args, (vertices, faces)) if (
+        args.visibility_mode == "raster" or args.compare_visibility
+    ) else {"import_setup_s": 0.0, "jit_compilation_s": 0.0, "total_s": 0.0}
+    comparison_numba_args = None
+    if args.compare_raster_backends:
+        comparison_numba_args = argparse.Namespace(**vars(args))
+        comparison_numba_args.raster_backend = "numba"
+        if requested_backend != "numba":
+            backend_startup = prepare_raster_backend(comparison_numba_args, (vertices, faces))
+        if comparison_numba_args.raster_backend != "numba" or not hasattr(comparison_numba_args, "_numba_raster"):
+            raise RuntimeError("Backend comparison requires working Numba; refusing to benchmark a NumPy fallback")
+    print(f"Full-mesh raster backend: {args.raster_backend} (requested {requested_backend})")
+    print(f"One-time raster backend import/setup: {backend_startup['import_setup_s']:.6f} s")
+    print(f"Numba JIT compilation only: {backend_startup['jit_compilation_s']:.6f} s")
 
     synchronize()
     splat_start = time.perf_counter()
@@ -828,7 +980,7 @@ def main():
     # This exercises compilation for both full batches and the final short batch.
     synchronize()
     startup_start = time.perf_counter()
-    benchmark_times = []
+    backend_comparison = None
     try:
         with torch.no_grad():
             trainer.prepare_knn(save_barycentric=False)
@@ -847,22 +999,70 @@ def main():
         startup_time = time.perf_counter() - startup_start
         del warmup_colors
 
-        for run in range(args.benchmark_runs):
+        # Separate profiling run supplies the unchanged images and breakdown.
+        synchronize()
+        evaluation_start = time.perf_counter()
+        evaluation_timing = KernelEvaluationTiming(synchronize)
+        splat_colors, splat_covered = evaluate_splat(evaluation_timing)
+        synchronize()
+        evaluation_time = time.perf_counter() - evaluation_start
+
+        # Keep diagnostic images/metrics above; clean repetitions rebuild all
+        # per-frame geometry with the prepared KNN state and static patch lookup.
+        splat_frame_times = []
+        reference_frame_times = []
+        clean_timing = KernelEvaluationTiming(synchronize, enabled=False)
+
+        def benchmark_reference():
+            frame_faces, frame_barys, _ = reference_mesh_surface(
+                mesh, args.camera_position, args.camera_look_at,
+                args.image_width, args.image_height, args.fov_y, args.batch_size,
+            )
+            return profiled_selected_kernel_colors(
+                trainer, frame_faces, frame_barys, kernel_ids, args.batch_size,
+                None, clean_timing, manage_knn_cache=False,
+            )
+
+        # Reference coverage can exercise different batch shapes; warm it untimed.
+        reference_warmup_start = time.perf_counter()
+        reference_warmup_colors = benchmark_reference()
+        synchronize()
+        reference_warmup_time = time.perf_counter() - reference_warmup_start
+        del reference_warmup_colors
+        for _ in range(args.benchmark_runs):
             synchronize()
-            evaluation_start = time.perf_counter()
-            run_timing = KernelEvaluationTiming(synchronize)
-            run_colors, run_covered = evaluate_splat(run_timing)
+            frame_start = time.perf_counter()
+            # Honor a failed diagnostic reuse check without repeating validation.
+            frame = render_splat_frame(
+                mesh, affected_sets, args, (vertices, faces), trainer, gating_lookup,
+                clean_timing, force_separate=args.validate_raster_reuse and reused is None,
+            )
             synchronize()
-            elapsed = time.perf_counter() - evaluation_start
-            benchmark_times.append(elapsed)
-            if run == 0:
-                # Images/metrics and the detailed breakdown describe the first
-                # measured run. Repetitions never rebuild or reset the KNN cache.
-                splat_colors, splat_covered = run_colors, run_covered
-                evaluation_timing = run_timing
-                evaluation_time = elapsed
-            else:
-                del run_colors
+            splat_frame_times.append(time.perf_counter() - frame_start)
+            del frame
+
+        for _ in range(args.benchmark_runs):
+            synchronize()
+            frame_start = time.perf_counter()
+            frame_colors = benchmark_reference()
+            synchronize()
+            reference_frame_times.append(time.perf_counter() - frame_start)
+            del frame_colors
+        if args.compare_raster_backends:
+            from compare_triangle_splat_backends import compare_backends
+
+            backend_comparison = compare_backends(
+                mesh, affected_sets, args, comparison_numba_args, (vertices, faces),
+                trainer, gating_lookup, clean_timing, synchronize,
+                force_separate=args.validate_raster_reuse and reused is None,
+                startup={"model_loading_s": loading_time, "raster_backend": backend_startup,
+                         "footprint_cache_load_s": cache_load_time,
+                         "footprint_discovery_s": slow_selection_time,
+                         "knn_preparation_s": knn_preparation_time,
+                         "gating_preparation_s": gating_preparation_time,
+                         "heat_kernel_warmup_s": warmup_time,
+                         "ray_reference_warmup_s": reference_warmup_time},
+            )
     finally:
         trainer.reset_knn()
     # Preserve selection/raster costs, but exclude startup, extra benchmark runs,
@@ -887,21 +1087,26 @@ def main():
     differences = np.abs(splat_colors - reference_colors)
     difference_image = np.zeros_like(differences)
     difference_image[reference_visible] = differences[reference_visible]
-    for name, colors in (
-        ("splat_render", splat_colors), ("reference", reference_colors),
-        ("diff", difference_image),
+    # Display compositing is outside all timings and never mutates metric inputs.
+    for name, colors, covered in (
+        ("splat_render", splat_colors, splat_covered),
+        ("reference", reference_colors, reference_visible),
+        ("diff", difference_image, reference_visible),
     ):
         path = OUTPUT_DIR / f"{name}.png"
-        save_raster_png(path, np.rint(np.clip(colors, 0, 1) * 255).astype(np.uint8))
+        image = np.rint(np.clip(colors, 0, 1) * 255).astype(np.uint8)
+        save_raster_png(path, display_background(image, covered, args.display_background))
         print(f"Exported: {path}")
-    save_raster_png(OUTPUT_DIR / "triangle_mask.png", triangle_mask)
+    save_raster_png(OUTPUT_DIR / "triangle_mask.png",
+                    display_background(triangle_mask, splat_covered, args.display_background))
     print(f"Exported: {OUTPUT_DIR / 'triangle_mask.png'}")
 
     covered_count = int(splat_covered.sum())
     reference_count = int(reference_visible.sum())
     print(f"Checkpoint: {checkpoint}")
     print("Footprint mode: vertices+centroid")
-    print("Splat pixels come exclusively from the selected triangle union; uncovered pixels stay black.")
+    print("Splat pixels come exclusively from the selected triangle union; computed uncovered pixels stay black.")
+    print(f"Saved visualization background: {args.display_background}")
     print("Blend: validated selected color terms, full-model outer KNN=50 / inner top-k=30,")
     print("       original normalization denominator and clamped/postprocessed mean color.")
     print(f"Total model kernels: {trainer.model.N_sources}")
@@ -920,6 +1125,10 @@ def main():
         print("Coverage / MAE / RMSE / max absolute error: N/A (no reference mesh-visible pixels)")
     print("Metrics use unquantized RGB over reference mesh-visible pixels/channels; background is excluded.")
     print("Timings exclude checkpoint/model loading and PNG encoding; include CUDA synchronization.")
+    print(f"Full-mesh raster backend: {args.raster_backend} (requested {requested_backend})")
+    print(f"One-time model/import/geometry loading: {loading_time:.6f} s")
+    print(f"One-time raster backend startup (excluded from frame/total splat timings): {backend_startup['total_s']:.6f} s")
+    print(f"Numba JIT compilation only (excluded): {backend_startup['jit_compilation_s']:.6f} s")
     print(f"Kernel/triangle selection: {selection_time:.6f} s")
     print(f"Cache load (including identity verification): {cache_load_time:.6f} s")
     print(f"Visibility filtering: {visibility_time:.6f} s")
@@ -937,23 +1146,46 @@ def main():
     print(f"Triangle splat rasterization: {raster_time:.6f} s")
     print(f"One-time KNN graph/cache preparation: {knn_preparation_time:.6f} s")
     print(f"One-time selected kernel/patch GPU lookup preparation: {gating_preparation_time:.6f} s")
-    print("Patch coverage is prepared once; per-kernel support comes from the GPU face/kernel lookup.")
+    print("Per-frame patch coverage is rebuilt; per-kernel support reuses the GPU face/kernel lookup.")
     print(f"Untimed evaluation warmup cost: {warmup_time:.6f} s")
     print(f"One-time KNN preparation + warmup cost: {startup_time:.6f} s")
     print("Startup total includes selected kernel/patch GPU lookup preparation.")
     print(f"Kernel evaluation/blending: {evaluation_time:.6f} s")
-    print(f"Steady-state kernel evaluation/blending total (first run): {evaluation_time:.6f} s")
+    print(f"Steady-state kernel evaluation/blending total (diagnostic run): {evaluation_time:.6f} s")
     evaluation_timing.report(evaluation_time)
     print(f"Steady-state benchmark runs: {args.benchmark_runs}")
-    print(f"Steady-state evaluation times: {[round(value, 6) for value in benchmark_times]} s")
-    print(f"Steady-state evaluation min: {min(benchmark_times):.6f} s")
-    print(f"Steady-state evaluation median: {statistics.median(benchmark_times):.6f} s")
-    print("Benchmarks reuse raster buffers and the warmed KNN cache; sub-step synchronization remains enabled.")
+    splat_median = statistics.median(splat_frame_times)
+    reference_median = statistics.median(reference_frame_times)
+    print(f"Splat frame times: {[round(value, 6) for value in splat_frame_times]} s")
+    print(f"Splat frame min: {min(splat_frame_times):.6f} s")
+    print(f"Splat frame median: {splat_median:.6f} s")
+    print(f"Reference frame times: {[round(value, 6) for value in reference_frame_times]} s")
+    print(f"Reference frame min: {min(reference_frame_times):.6f} s")
+    print(f"Reference frame median: {reference_median:.6f} s")
+    print(f"Median speedup (reference / splat): {reference_median / splat_median:.6f}x")
+    print("Frame benchmarks rerun per-frame geometry and evaluation with prepared KNN state;")
+    print("exclude loading, preparation, warmup, PNG encoding, profiling and optional validation.")
     print("Total splat time includes one steady-state evaluation, selection, and rasterization; excludes startup and extra runs.")
     print(f"Total splat render time: {total_splat_time:.6f} s")
     print(f"Total steady-state splat time: {total_splat_time:.6f} s")
     print(f"Total render time (splat path, excluding reference): {total_splat_time:.6f} s")
     print(f"Reference render time: {reference_time:.6f} s")
+    if backend_comparison is not None:
+        errors = differences[reference_visible]
+        backend_comparison["hktex_reference_comparison"] = {
+            "splat_backend": args.raster_backend,
+            "splat_visible_pixels": covered_count, "reference_visible_pixels": reference_count,
+            "coverage_fraction": int((splat_covered & reference_visible).sum()) / reference_count if reference_count else None,
+            "rgb_mae": float(errors.mean()) if reference_count else None,
+            "rgb_rmse": float(np.sqrt(np.mean(errors ** 2))) if reference_count else None,
+            "rgb_max_absolute_error": float(errors.max()) if reference_count else None,
+            "warmed_frame_samples_s": reference_frame_times,
+            "warmed_frame_median_s": reference_median,
+            "diagnostic_render_s": reference_time,
+        }
+        if args.raster_backend_report is not None:
+            args.raster_backend_report.write_text(json.dumps(backend_comparison, indent=2) + "\n")
+            print(f"Backend report updated with HKTex reference comparison: {args.raster_backend_report}")
 
 
 if __name__ == "__main__":
