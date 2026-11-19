@@ -1,0 +1,494 @@
+[
+  {
+    "path": "hktex_splatting/cli.py",
+    "definition": "main.options",
+    "kind": "FunctionDef",
+    "line": 15
+  },
+  {
+    "path": "hktex_splatting/knn_heat/packed_support.py",
+    "definition": "PreparedSupport.select",
+    "kind": "FunctionDef",
+    "line": 78
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "definition": "PreparedCoefficientTopology",
+    "kind": "ClassDef",
+    "line": 11
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "definition": "PreparedCoefficientTopology.__init__",
+    "kind": "FunctionDef",
+    "line": 13
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "definition": "PreparedCoefficientTopology.dispatch_order",
+    "kind": "FunctionDef",
+    "line": 53
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "definition": "PreparedCoefficientTopology.device",
+    "kind": "FunctionDef",
+    "line": 57
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "definition": "PreparedCoefficientTopology.cpu_bytes",
+    "kind": "FunctionDef",
+    "line": 61
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "definition": "PreparedCoefficientTopology.device_bytes",
+    "kind": "FunctionDef",
+    "line": 65
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "definition": "PreparedCoefficientTopology.matches",
+    "kind": "FunctionDef",
+    "line": 68
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "definition": "PreparedCoefficientTopology.matches_scene",
+    "kind": "FunctionDef",
+    "line": 87
+  },
+  {
+    "path": "hktex_splatting/modules/spectral_heat_field.py",
+    "definition": "LiveHeatField.prepare_topology",
+    "kind": "FunctionDef",
+    "line": 98
+  },
+  {
+    "path": "hktex_splatting/modules/spectral_heat_field.py",
+    "definition": "LiveHeatField.render",
+    "kind": "FunctionDef",
+    "line": 198
+  },
+  {
+    "path": "hktex_splatting/rendering/dynamic_dispatch.py",
+    "definition": "stable_kernel_face_order",
+    "kind": "FunctionDef",
+    "line": 8
+  },
+  {
+    "path": "hktex_splatting/rendering/dynamic_dispatch.py",
+    "definition": "compact_tasks",
+    "kind": "FunctionDef",
+    "line": 25
+  },
+  {
+    "path": "hktex_splatting/rendering/footprint.py",
+    "definition": "projected_bounds",
+    "kind": "FunctionDef",
+    "line": 11
+  },
+  {
+    "path": "hktex_splatting/rendering/footprint.py",
+    "definition": "projected_bounds.sigmoid",
+    "kind": "FunctionDef",
+    "line": 36
+  },
+  {
+    "path": "hktex_splatting/rendering/footprint.py",
+    "definition": "prune_dispatch",
+    "kind": "FunctionDef",
+    "line": 101
+  },
+  {
+    "path": "hktex_splatting/rendering/frame.py",
+    "definition": "StageTimer",
+    "kind": "ClassDef",
+    "line": 10
+  },
+  {
+    "path": "hktex_splatting/rendering/frame.py",
+    "definition": "StageTimer.__init__",
+    "kind": "FunctionDef",
+    "line": 12
+  },
+  {
+    "path": "hktex_splatting/rendering/frame.py",
+    "definition": "StageTimer.stage",
+    "kind": "FunctionDef",
+    "line": 16
+  },
+  {
+    "path": "hktex_splatting/rendering/frame.py",
+    "definition": "SurfaceFrame",
+    "kind": "ClassDef",
+    "line": 26
+  },
+  {
+    "path": "hktex_splatting/rendering/gpu_dispatch.py",
+    "definition": "StepCoefficientTopology",
+    "kind": "ClassDef",
+    "line": 84
+  },
+  {
+    "path": "hktex_splatting/rendering/gpu_dispatch.py",
+    "definition": "StepCoefficientTopology.__init__",
+    "kind": "FunctionDef",
+    "line": 86
+  },
+  {
+    "path": "hktex_splatting/rendering/gpu_dispatch.py",
+    "definition": "StepCoefficientTopology.device_bytes",
+    "kind": "FunctionDef",
+    "line": 99
+  },
+  {
+    "path": "hktex_splatting/rendering/gpu_dispatch.py",
+    "definition": "StepCoefficientTopology.matches",
+    "kind": "FunctionDef",
+    "line": 102
+  },
+  {
+    "path": "hktex_splatting/rendering/gpu_dispatch.py",
+    "definition": "build_scene",
+    "kind": "FunctionDef",
+    "line": 118
+  },
+  {
+    "path": "hktex_splatting/rendering/gpu_dispatch.py",
+    "definition": "build_scene.context",
+    "kind": "FunctionDef",
+    "line": 127
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "definition": "TileBins",
+    "kind": "ClassDef",
+    "line": 101
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "definition": "TileBins.device_bytes",
+    "kind": "FunctionDef",
+    "line": 107
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "definition": "bin_footprints",
+    "kind": "FunctionDef",
+    "line": 112
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "definition": "nearest_sources",
+    "kind": "FunctionDef",
+    "line": 150
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "definition": "kernel_footprints",
+    "kind": "FunctionDef",
+    "line": 192
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "definition": "DirectTileRenderer._native",
+    "kind": "FunctionDef",
+    "line": 512
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "definition": "DirectTileRenderer._native.diffuse",
+    "kind": "FunctionDef",
+    "line": 554
+  },
+  {
+    "path": "hktex_splatting/rendering/prepared_geometry.py",
+    "definition": "PreparedGeometry.matches",
+    "kind": "FunctionDef",
+    "line": 69
+  },
+  {
+    "path": "hktex_splatting/rendering/prepared_geometry.py",
+    "definition": "PreparedGeometry.dispatch",
+    "kind": "FunctionDef",
+    "line": 78
+  },
+  {
+    "path": "hktex_splatting/rendering/prepared_geometry.py",
+    "definition": "PreparedGeometry.active_pixels",
+    "kind": "FunctionDef",
+    "line": 102
+  },
+  {
+    "path": "hktex_splatting/rendering/resident.py",
+    "definition": "WorkBins",
+    "kind": "ClassDef",
+    "line": 64
+  },
+  {
+    "path": "hktex_splatting/rendering/resident.py",
+    "definition": "WorkBins.device_bytes",
+    "kind": "FunctionDef",
+    "line": 69
+  },
+  {
+    "path": "hktex_splatting/rendering/resident.py",
+    "definition": "bin_tasks",
+    "kind": "FunctionDef",
+    "line": 74
+  },
+  {
+    "path": "hktex_splatting/rendering/splat_autograd.py",
+    "definition": "PreparedScene.build",
+    "kind": "FunctionDef",
+    "line": 40
+  },
+  {
+    "path": "hktex_splatting/rendering/splat_autograd.py",
+    "definition": "PreparedScene.build.tensor",
+    "kind": "FunctionDef",
+    "line": 61
+  },
+  {
+    "path": "hktex_splatting/rendering/splat_autograd.py",
+    "definition": "reference",
+    "kind": "FunctionDef",
+    "line": 208
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_heat_map.py",
+    "definition": "face_candidates",
+    "kind": "FunctionDef",
+    "line": 9
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_heat_map.py",
+    "definition": "polynomial_distance",
+    "kind": "FunctionDef",
+    "line": 35
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_heat_map.py",
+    "definition": "shade_numpy",
+    "kind": "FunctionDef",
+    "line": 67
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_reference.py",
+    "definition": "weights",
+    "kind": "FunctionDef",
+    "line": 90
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_reference.py",
+    "definition": "weights.sigmoid",
+    "kind": "FunctionDef",
+    "line": 101
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_reference.py",
+    "definition": "render_numpy",
+    "kind": "FunctionDef",
+    "line": 106
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_renderer.py",
+    "definition": "ForwardRenderer",
+    "kind": "ClassDef",
+    "line": 14
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_renderer.py",
+    "definition": "ForwardRenderer.__init__",
+    "kind": "FunctionDef",
+    "line": 16
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_renderer.py",
+    "definition": "ForwardRenderer._tensor",
+    "kind": "FunctionDef",
+    "line": 33
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_renderer.py",
+    "definition": "ForwardRenderer.shade",
+    "kind": "FunctionDef",
+    "line": 36
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_renderer.py",
+    "definition": "ForwardRenderer.frame",
+    "kind": "FunctionDef",
+    "line": 116
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "definition": "parser",
+    "kind": "FunctionDef",
+    "line": 37
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "definition": "main",
+    "kind": "FunctionDef",
+    "line": 84
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "definition": "main.finish_setup_stage",
+    "kind": "FunctionDef",
+    "line": 173
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "definition": "main.prepare",
+    "kind": "FunctionDef",
+    "line": 266
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "definition": "main.coefficients",
+    "kind": "FunctionDef",
+    "line": 350
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "definition": "main.recipe",
+    "kind": "FunctionDef",
+    "line": 352
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "definition": "main.properties",
+    "kind": "FunctionDef",
+    "line": 356
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "definition": "main.project",
+    "kind": "FunctionDef",
+    "line": 359
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "definition": "main.native",
+    "kind": "FunctionDef",
+    "line": 368
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "definition": "main.phase",
+    "kind": "FunctionDef",
+    "line": 383
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "definition": "main.evaluate",
+    "kind": "FunctionDef",
+    "line": 387
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "definition": "main.trace_ready",
+    "kind": "FunctionDef",
+    "line": 440
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "definition": "_sort_pairs",
+    "kind": "FunctionDef",
+    "line": 11
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "definition": "_nearest",
+    "kind": "FunctionDef",
+    "line": 28
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "definition": "nearest",
+    "kind": "FunctionDef",
+    "line": 54
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "definition": "_compact",
+    "kind": "FunctionDef",
+    "line": 68
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "definition": "compact_work",
+    "kind": "FunctionDef",
+    "line": 77
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "definition": "_splat_heat",
+    "kind": "FunctionDef",
+    "line": 87
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "definition": "splat_responses",
+    "kind": "FunctionDef",
+    "line": 149
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "definition": "identify_ranges",
+    "kind": "FunctionDef",
+    "line": 23
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "definition": "render_ranges",
+    "kind": "FunctionDef",
+    "line": 34
+  },
+  {
+    "path": "hktex_splatting/utils/compiler_runtime.py",
+    "definition": "source_paths",
+    "kind": "FunctionDef",
+    "line": 19
+  },
+  {
+    "path": "hktex_splatting/utils/compiler_runtime.py",
+    "definition": "compiler_environment",
+    "kind": "FunctionDef",
+    "line": 24
+  },
+  {
+    "path": "hktex_splatting/utils/compiler_runtime.py",
+    "definition": "configure_compiler_cache",
+    "kind": "FunctionDef",
+    "line": 32
+  },
+  {
+    "path": "hktex_splatting/utils/compiler_runtime.py",
+    "definition": "configure_compiler_cache.digest",
+    "kind": "FunctionDef",
+    "line": 39
+  },
+  {
+    "path": "hktex_splatting/utils/compiler_runtime.py",
+    "definition": "runtime_record",
+    "kind": "FunctionDef",
+    "line": 62
+  },
+  {
+    "path": "hktex_splatting/utils/training_profile.py",
+    "definition": "children_cpu_seconds",
+    "kind": "FunctionDef",
+    "line": 12
+  },
+  {
+    "path": "hktex_splatting/utils/training_profile.py",
+    "definition": "timed_phase",
+    "kind": "FunctionDef",
+    "line": 18
+  }
+]

@@ -1,0 +1,198 @@
+{
+  "report_date": "2026-11-16",
+  "task": "Update existing HKTex versus HKTex Splat benchmark",
+  "passed": true,
+  "modified_files": [
+    "README.md",
+    "docs/BENCHMARK_PROFILER.md",
+    "splatting_script/README.md",
+    "splatting_script/benchmarks/compare_training.py",
+    "splatting_script/benchmarks/pipeline_report.py",
+    "splatting_script/benchmarks/pipeline_workflow.py",
+    "splatting_script/benchmarks/renderer_comparison.py",
+    "splatting_script/benchmarks/training_research.py",
+    "splatting_script/experiments/compare_backends.py"
+  ],
+  "new_files": [
+    "docs/HKTEX_VS_HKS_BENCHMARK.md",
+    "docs/hktex_vs_hks_benchmark/verification.json"
+  ],
+  "deleted_files": [],
+  "checks": {
+    "static_checks.json": {
+      "passed": true,
+      "checks": {
+        "hktex_byte_identical": true,
+        "hktex_splatting_byte_identical": true,
+        "scripts_byte_identical": true,
+        "render_ast_identical": true,
+        "uninstrumented_step_ast_identical": true,
+        "profiled_step_ast_identical": true,
+        "reset_model_for_comparison_ast_identical": true,
+        "common_response_differences_ast_identical": true,
+        "full_coverage_omissions_ast_identical": true,
+        "existing_strict_validation_gate_ast_identical": true,
+        "git_index_unchanged": true,
+        "all_hks_modules_parse": true,
+        "six_benchmark_modules_import_without_torch_or_triton": true,
+        "workload_1000_128_preview": true,
+        "workload_5000_256_preview": true,
+        "workload_37_32_preview": true,
+        "native_entry_preview": true,
+        "hybrid_entry_preview": true,
+        "original_entry_preview": true,
+        "2dgs_entry_preview": true,
+        "resident_retired": true,
+        "splat_retired": true,
+        "invalid_preflight_mixtures_rejected": true,
+        "all_previews_gpu_free": true
+      },
+      "count": 24
+    },
+    "scope_checks.json": {
+      "passed": true,
+      "changed_snapshot_files": [
+        "splatting_script/experiments/compare_backends.py",
+        "splatting_script/benchmarks/pipeline_workflow.py",
+        "splatting_script/benchmarks/training_research.py",
+        "splatting_script/benchmarks/renderer_comparison.py",
+        "splatting_script/benchmarks/compare_training.py",
+        "splatting_script/benchmarks/pipeline_report.py",
+        "README.md"
+      ],
+      "all_production_python_parses": true,
+      "modified_document_links_valid": true,
+      "no_trailing_whitespace": true,
+      "git_index_unchanged": true,
+      "no_deletions": true
+    },
+    "feature_checks.json": {
+      "passed": true,
+      "checks": {
+        "native_preflight_replay": true,
+        "hybrid_preflight_replay": true,
+        "paired_gate_accepts_different_deployed_rgb": true,
+        "initial_quality_differences_recorded": true,
+        "different_saved_initialization_blocks_gate": true,
+        "different_target_blocks_gate": true,
+        "common_evaluator_disagreement_blocks_gate": true,
+        "nonfinite_target_rejected": true,
+        "tampered_initialization_hash_rejected": true,
+        "nonfinite_parameter_rejected": true,
+        "before_after_model_bitwise_identical": true,
+        "before_after_loss_bitwise_identical": true,
+        "before_after_quality_identical": true,
+        "before_after_scheduler_identical": true,
+        "before_after_adam_moments_bitwise_identical": true,
+        "orchestrator_missing": true,
+        "orchestrator_failed": true,
+        "orchestrator_success": true,
+        "missing_new_gate_withholds_ratio": true,
+        "reported_ratio_and_memory_formula": true,
+        "report_labels_and_csv": true,
+        "report_records_final_loss": true,
+        "aliases_are_only_two_implementations": true,
+        "signed_psnr_and_memory_metrics": true
+      },
+      "count": 24,
+      "scope": "CPU fixtures only; no GPU renderer execution"
+    },
+    "reader_checks.json": {
+      "passed": true,
+      "checks": {
+        "historical_backend_identities_preserved": true,
+        "missing_historical_deployed_metrics_are_null": true,
+        "different_physical_gpu_withholds_speedup": true,
+        "different_selector_controls_rejected": true
+      }
+    },
+    "runtime_imports.json": {
+      "passed": true,
+      "renderer_class": "<class 'hktex_splatting.rendering.heat_kernel_splatting.DirectTileRenderer'>",
+      "renderer_call": "(self, *, diffusion_time=None, trace=False, oracle=False, full_reference=False)",
+      "field_class": "<class 'hktex_splatting.modules.spectral_heat_field.LiveHeatField'>",
+      "backends": {
+        "hybrid": "direct",
+        "native": "native",
+        "original": "native",
+        "2dgs": "direct"
+      },
+      "cuda_initialized": false,
+      "scope": "CPU import/interface check only; native GPU-only package not executed"
+    },
+    "job_previews.json": {
+      "passed": true,
+      "commands_previewed": {
+        "preview_1000_128": 9,
+        "preview_37_32": 9,
+        "preview_5000_256": 9
+      },
+      "gpu_imports": false
+    }
+  },
+  "archived_benchmark_checks": {
+    "passed": true,
+    "tests": 22,
+    "scope": "Retired checks read from the recovery archive and executed only under /tmp, not restored to the repository.",
+    "adaptations": [
+      "Canonical renderer_comparison import replaces retired direct_tiles alias.",
+      "Update expected workflow jobs 7 to 10 and scaling jobs 75 to 111; expected plots 7 to 9.",
+      "Update failed-prerequisite status wording."
+    ],
+    "exclusions": [
+      "Retired CLI-option mixture case excluded; current invalid flag/preflight mixtures checked independently.",
+      "Retired observer fixture suite requires deleted fixture modules; not restored or executed. Existing profile-validation gate remains unchanged."
+    ],
+    "log_tail": [
+      "",
+      "----------------------------------------------------------------------",
+      "Ran 22 tests in 67.867s",
+      "",
+      "OK"
+    ]
+  },
+  "gpu_validation": {
+    "executed": false,
+    "allocation": {
+      "SLURM_JOB_ID": null,
+      "SLURM_JOB_GPUS": null,
+      "CUDA_VISIBLE_DEVICES": null
+    },
+    "reason": "No allocated A100: no real-renderer GPU smoke, full training, performance benchmark, or CUDA correctness claim."
+  },
+  "protected_implementation": {
+    "original_hktex_byte_identical": true,
+    "hks_package_byte_identical": true,
+    "original_scripts_byte_identical": true,
+    "native_and_hks_render_function_ast_identical": true,
+    "measured_step_and_optimizer_function_ast_identical": true,
+    "existing_strict_validation_branch_ast_identical": true
+  },
+  "git": {
+    "index_unchanged": true,
+    "index_sha256": "9e5a5cc624e2c730e351c26dbd4bd9afc2bcfcd080ac8cdf05786a85907abc7e",
+    "commit_or_push": false,
+    "staged_or_unstaged_work_discarded": false,
+    "scope": "Checkout was already extensively dirty; this report describes only this task. No git reset, stash, stage, commit or push performed."
+  },
+  "source_sha256": {
+    "README.md": "289c748a9c6da411ee18d09cbea9c95766faee5a2448cfd88d75d77820d4f1bb",
+    "docs/BENCHMARK_PROFILER.md": "0a9249897a9ad930c38b75337dcf0ea542ab495ceccd30cf30e0bd327ff07916",
+    "docs/HKTEX_VS_HKS_BENCHMARK.md": "55536f02568341a18878ed46133604813f689d3972dc1f5bba93ba54d8c4c29e",
+    "splatting_script/README.md": "bde59ba9756ab1448914425a9fd1b679bba280c9dd434e36867062e7fbe3dc5e",
+    "splatting_script/benchmarks/compare_training.py": "fefd62e58f62e05960eb55bc992c8c17a7c99eb62df94328db087d62862061d7",
+    "splatting_script/benchmarks/pipeline_report.py": "8aa6b8de253810c9f9fd1a3cde92f14299afac07c5877c185f40fb8a361dae80",
+    "splatting_script/benchmarks/pipeline_workflow.py": "ed69160aee9763a4323c6e64b8806537f12ce1c1130e1a0c6b4eedc3984ea670",
+    "splatting_script/benchmarks/renderer_comparison.py": "3de27460a09a6f364013f0d93c1c09b6f38d1c16f9a1e01e6334911ed0759e8f",
+    "splatting_script/benchmarks/training_research.py": "fc36182c818ddf485101ab91fcb88e65477321fa607aa16744d153fe188519e8",
+    "splatting_script/experiments/compare_backends.py": "4dd283131c891db71d99c676010b241e06b2566bb693acd4fbfe97af452d4755"
+  },
+  "limitations": [
+    "CPU fixtures validate orchestration, finite gates, replay, reporting and unchanged Adam trajectories; they do not validate the compiled GPU renderer.",
+    "Paired preflight checks repeatability and finite VJPs, not an independent derivative oracle; preserve and run --validate-only separately within its capacity.",
+    "PyTorch allocator peaks omit some FAISS/library/driver memory. Native outer50 and triangle cap128 policies differ.",
+    "Historical workflows remain readable and are marked not_recorded_historical for the new preflight protocol."
+  ],
+  "temporary_before_images": "/tmp/hktex-benchmark-update-2ad2l7xd/before",
+  "temporary_recovery_scope": "Session-only before-images of Python files and README; not a durable research archive. Prior cleanup archives unchanged."
+}

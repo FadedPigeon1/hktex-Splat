@@ -1,0 +1,1705 @@
+[
+  {
+    "path": "hktex_splatting/__init__.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": [
+      "from importlib import import_module"
+    ]
+  },
+  {
+    "path": "hktex_splatting/__main__.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": [
+      "from hktex_splatting.cli import main"
+    ]
+  },
+  {
+    "path": "hktex_splatting/cli.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": [
+      "import sys",
+      "from splatting_script.benchmarks.renderer_comparison import parser as hybrid_parser",
+      "from hktex_splatting.trainers.forward import parser as legacy_parser",
+      "from splatting_script.experiments.compare_backends import main as run",
+      "from splatting_script.benchmarks.legacy.train_forward import main as run"
+    ]
+  },
+  {
+    "path": "hktex_splatting/knn_heat/__init__.py",
+    "retained": true,
+    "role": "shared spectral bounds/candidate selection and ordered support/fallback",
+    "imports": []
+  },
+  {
+    "path": "hktex_splatting/knn_heat/packed_support.py",
+    "retained": true,
+    "role": "shared spectral bounds/candidate selection and ordered support/fallback",
+    "imports": [
+      "from contextlib import nullcontext",
+      "import numpy as np",
+      "import torch",
+      "from hktex_splatting.rendering.triangle_heat_map import FaceMap"
+    ]
+  },
+  {
+    "path": "hktex_splatting/knn_heat/resident_support.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/knn_heat/triangle_kernel_support.py",
+    "retained": true,
+    "role": "shared spectral bounds/candidate selection and ordered support/fallback",
+    "imports": [
+      "from contextlib import nullcontext",
+      "from dataclasses import dataclass",
+      "import numpy as np",
+      "import torch",
+      "import triton",
+      "from hktex_splatting.knn_heat.packed_support import PreparedSupport",
+      "from hktex_splatting.triton import resident_gpu"
+    ]
+  },
+  {
+    "path": "hktex_splatting/modules/__init__.py",
+    "retained": true,
+    "role": "source spectral state and corner coefficient forward/backward",
+    "imports": []
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "import numpy as np",
+      "import torch",
+      "from hktex_splatting.rendering.triangle_splat_reference import kernel_face_order",
+      "from hktex_splatting.rendering.dynamic_dispatch import stable_kernel_face_order"
+    ]
+  },
+  {
+    "path": "hktex_splatting/modules/coefficients.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/modules/live_field.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/modules/spectral_heat_coefficients.py",
+    "retained": true,
+    "role": "source spectral state and corner coefficient forward/backward",
+    "imports": [
+      "import torch",
+      "from torch.autograd.function import once_differentiable",
+      "import triton",
+      "from hktex_splatting.triton import spectral_heat_coefficients as coefficient_gpu"
+    ]
+  },
+  {
+    "path": "hktex_splatting/modules/spectral_heat_field.py",
+    "retained": true,
+    "role": "source spectral state and corner coefficient forward/backward",
+    "imports": [
+      "from dataclasses import dataclass",
+      "from contextlib import nullcontext",
+      "import numpy as np",
+      "import torch",
+      "from torch.utils.checkpoint import checkpoint",
+      "from hktex_splatting.knn_heat.packed_support import PreparedSupport",
+      "from hktex_splatting.modules.coefficient_topology import PreparedCoefficientTopology",
+      "from hktex_splatting.rendering.triangle_heat_map import FaceMap, face_candidates",
+      "from hktex_splatting.rendering.splat_autograd import splat",
+      "from hktex_splatting.knn_heat.triangle_kernel_support import ResidentSupportGeometry, FusedResidentSupportGeometry",
+      "from hktex_splatting.modules.spectral_heat_coefficients import fused_coefficients"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/__init__.py",
+    "retained": true,
+    "role": "hybrid visibility/layout/renderer/backward or required internal correctness-control data",
+    "imports": []
+  },
+  {
+    "path": "hktex_splatting/rendering/cameras.py",
+    "retained": true,
+    "role": "hybrid visibility/layout/renderer/backward or required internal correctness-control data",
+    "imports": [
+      "import copy",
+      "from hktex_splatting.utils.experiment_io import CAMERAS, VIEWS",
+      "from hktex_splatting.utils.reference_assets import camera as original_camera",
+      "import numpy as np"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/core.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/differentiable.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/direct_tiles.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/dynamic_dispatch.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "import numpy as np"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/fast_raster.py",
+    "retained": true,
+    "role": "hybrid visibility/layout/renderer/backward or required internal correctness-control data",
+    "imports": [
+      "import math",
+      "import numpy as np",
+      "from numba import njit",
+      "from scripts.visualize_kernel_faces import perspective_camera_basis"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/footprint.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from dataclasses import replace",
+      "import math",
+      "import numpy as np",
+      "from hktex_splatting.rendering.triangle_splat_reference import kernel_face_order",
+      "from scripts.visualize_kernel_faces import perspective_camera_basis"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/frame.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from contextlib import contextmanager",
+      "from dataclasses import dataclass",
+      "import time"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/gpu_dispatch.py",
+    "retained": true,
+    "role": "hybrid visibility/layout/renderer/backward or required internal correctness-control data",
+    "imports": [
+      "from dataclasses import dataclass",
+      "from contextlib import nullcontext",
+      "import numpy as np",
+      "import torch",
+      "import triton",
+      "from hktex_splatting.rendering.splat_autograd import PreparedScene",
+      "from hktex_splatting.rendering.triangle_splat_reference import Dispatch"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "retained": true,
+    "role": "hybrid visibility/layout/renderer/backward or required internal correctness-control data",
+    "imports": [
+      "from contextlib import nullcontext",
+      "from dataclasses import dataclass",
+      "from types import SimpleNamespace",
+      "import copy",
+      "import json",
+      "import numpy as np",
+      "import torch",
+      "from hktex_splatting.rendering.splat_autograd import _Splat",
+      "from hktex_splatting.triton.heat_kernel_splatting import nearest",
+      "from hktex_splatting.triton.heat_kernel_splatting import compact_work",
+      "from hktex_splatting.modules.spectral_heat_coefficients import fused_coefficients",
+      "from hktex_splatting.triton.heat_kernel_splatting import group_triangle_work",
+      "from hktex_splatting.triton.heat_kernel_splatting import hybrid_forward",
+      "from hktex_splatting.rendering.resident import ResidentTopology",
+      "from hktex_splatting.rendering.prepared_geometry import PreparedGeometry",
+      "from hktex_splatting.rendering.resident import ResidentDispatchGeometry",
+      "from hktex_splatting.knn_heat.triangle_kernel_support import ResidentSupportGeometry",
+      "from hktex_splatting.utils.support_debug import SupportDebugger",
+      "from hktex_splatting.knn_heat.triangle_kernel_support import FusedResidentSupportGeometry",
+      "from hktex_splatting.triton.heat_kernel_splatting import splat_responses",
+      "from hktex_splatting.rendering.footprint import projected_bounds",
+      "from hktex_splatting.rendering.triangle_heat_map import FaceMap"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/kernel_centric.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/kernel_centric_raster.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/mesh_visibility_raster.py",
+    "retained": true,
+    "role": "hybrid visibility/layout/renderer/backward or required internal correctness-control data",
+    "imports": [
+      "import math",
+      "import numpy as np",
+      "from hktex_splatting.rendering.fast_raster import StaticRaster, _fast_kernel",
+      "from scripts.visualize_kernel_faces import perspective_camera_basis"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/native_reference.py",
+    "retained": true,
+    "role": "hybrid visibility/layout/renderer/backward or required internal correctness-control data",
+    "imports": [
+      "from __future__ import annotations",
+      "import argparse",
+      "import json",
+      "import os",
+      "import time",
+      "from pathlib import Path",
+      "from hktex_splatting.utils.reference_assets import CACHE, EXPERIMENT, ROOT, camera, check_repetitions, common_parser, geometry_digest, raster_surface, require_gpu_allocation, runtime_cache_environment, save_npy, save_png, save_surface, sha256, stats, write_json",
+      "import numpy as np",
+      "import torch",
+      "from interactive_density_knn import load_datamodule_and_trainer_only",
+      "from hktex.modules.heat_kernel_texture_knn import HeatKernelTextureKNN",
+      "from hktex.modules.eigen_albo_knn import EigenAlboInterpolationKNN"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/prepared_geometry.py",
+    "retained": true,
+    "role": "hybrid visibility/layout/renderer/backward or required internal correctness-control data",
+    "imports": [
+      "import numpy as np",
+      "import torch",
+      "from hktex_splatting.rendering.triangle_splat_reference import Dispatch, dispatch, kernel_face_order",
+      "from hktex_splatting.rendering.dynamic_dispatch import stable_kernel_face_order, compact_tasks",
+      "from hktex_splatting.rendering.triangle_heat_map import FaceMap"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/reference_mesh.py",
+    "retained": true,
+    "role": "hybrid visibility/layout/renderer/backward or required internal correctness-control data",
+    "imports": [
+      "from __future__ import annotations",
+      "import time",
+      "from hktex_splatting.utils.reference_assets import MESH, camera, check_repetitions, common_parser, geometry_digest, glb_json, load_cpu_mesh, raster_surface, save_npy, save_png, save_surface, sha256, stats, write_json",
+      "import numpy as np",
+      "import trimesh",
+      "import numpy as np"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/renderer.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/resident.py",
+    "retained": true,
+    "role": "hybrid visibility/layout/renderer/backward or required internal correctness-control data",
+    "imports": [
+      "from dataclasses import dataclass",
+      "import torch",
+      "import triton",
+      "from hktex_splatting.rendering.gpu_dispatch import DeviceDispatchGeometry, DeviceDispatch",
+      "from hktex_splatting.rendering.splat_autograd import PreparedScene",
+      "from hktex_splatting.triton import resident_gpu",
+      "from hktex_splatting.knn_heat.triangle_kernel_support import DeviceSupport, ResidentSupportGeometry, check_sizes, _scope"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/splat_autograd.py",
+    "retained": true,
+    "role": "hybrid visibility/layout/renderer/backward or required internal correctness-control data",
+    "imports": [
+      "from dataclasses import dataclass",
+      "import numpy as np",
+      "import torch",
+      "from torch.autograd.function import once_differentiable",
+      "import triton",
+      "from hktex_splatting.rendering.triangle_splat_reference import Dispatch, dispatch",
+      "from hktex_splatting.triton import triangle_splat_forward as gpu, heat_kernel_backward as backward, runtime_splat_kernels as runtime_kernels",
+      "from hktex_splatting.triton.resident_gpu import render_ranges"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_heat_map.py",
+    "retained": true,
+    "role": "hybrid visibility/layout/renderer/backward or required internal correctness-control data",
+    "imports": [
+      "from dataclasses import dataclass",
+      "import numpy as np",
+      "import torch"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_reference.py",
+    "retained": true,
+    "role": "hybrid visibility/layout/renderer/backward or required internal correctness-control data",
+    "imports": [
+      "from dataclasses import dataclass",
+      "import numpy as np"
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_renderer.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "import numpy as np",
+      "import torch",
+      "import triton",
+      "from hktex_splatting.rendering.triangle_splat_reference import dispatch, kernel_face_order",
+      "from hktex_splatting.triton import triangle_splat_forward as gpu",
+      "from hktex_splatting.rendering.mesh_visibility_raster import BVHRaster",
+      "from hktex_splatting.rendering.frame import StageTimer, SurfaceFrame"
+    ]
+  },
+  {
+    "path": "hktex_splatting/trainers/__init__.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": []
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from hktex_splatting.utils.paths import ROOT as PROJECT_ROOT, SCRIPTS",
+      "import argparse",
+      "from contextlib import nullcontext",
+      "import dataclasses",
+      "import hashlib",
+      "import json",
+      "import os",
+      "import random",
+      "from pathlib import Path",
+      "import sys",
+      "import time",
+      "from hktex_splatting.utils.experiment_io import HERE, ROOT, MESH, ROIS, configure_cache, digest, gpu_guard, input_identities, install_import_paths, unique_output, write_json",
+      "from hktex_splatting.utils.compiler_runtime import source_paths as training_sources, configure_compiler_cache, runtime_record",
+      "import resource",
+      "import numpy as np",
+      "import torch",
+      "from PIL import Image",
+      "from types import SimpleNamespace",
+      "from interactive_density_knn import load_datamodule_and_trainer_only",
+      "from hktex.trainers.utils import parse_optimizers_and_schedulers",
+      "from hktex.utils import seed_everything",
+      "from hktex_splatting.utils.reference_assets import load_cpu_mesh",
+      "from hktex_splatting.rendering.reference_mesh import texture_sample",
+      "from hktex_splatting.rendering.mesh_visibility_raster import BVHRaster",
+      "from hktex_splatting.rendering.cameras import cameras",
+      "from hktex_splatting.rendering.triangle_splat_reference import dispatch",
+      "from hktex_splatting.rendering.splat_autograd import PreparedScene, splat",
+      "from hktex_splatting.modules.spectral_heat_field import LiveHeatField",
+      "from hktex_splatting.rendering.footprint import projected_bounds, prune_dispatch",
+      "from hktex_splatting.rendering.triangle_splat_renderer import ForwardRenderer",
+      "from hktex_splatting.utils.training_profile import timed_phase, summarize_trace",
+      "from hktex_splatting.rendering.prepared_geometry import PreparedGeometry",
+      "from hktex_splatting.rendering.gpu_dispatch import DeviceDispatchGeometry, build_scene as build_device_scene",
+      "from hktex_splatting.rendering.resident import ResidentDispatchGeometry, build_scene as build_resident_scene",
+      "from hktex_splatting.utils.metrics import ssim_foreground, roi_mask"
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/__init__.py",
+    "retained": true,
+    "role": "hybrid support/spectral/emission/backward or required internal benchmark-control kernels",
+    "imports": []
+  },
+  {
+    "path": "hktex_splatting/triton/backward.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/coefficient_gpu.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/direct_tiles.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/gpu.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_backward.py",
+    "retained": true,
+    "role": "hybrid support/spectral/emission/backward or required internal benchmark-control kernels",
+    "imports": [
+      "import triton",
+      "import triton.language as tl"
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "retained": true,
+    "role": "hybrid support/spectral/emission/backward or required internal benchmark-control kernels",
+    "imports": [
+      "import torch",
+      "import triton",
+      "import triton.language as tl",
+      "from contextlib import nullcontext",
+      "from hktex_splatting.triton import triangle_splat_forward as gpu, runtime_splat_kernels as runtime_counts"
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "retained": true,
+    "role": "hybrid support/spectral/emission/backward or required internal benchmark-control kernels",
+    "imports": [
+      "import triton",
+      "import triton.language as tl",
+      "from triton.language.extra.cuda import libdevice as cuda_libdevice"
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/runtime_counts.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/runtime_splat_kernels.py",
+    "retained": true,
+    "role": "hybrid support/spectral/emission/backward or required internal benchmark-control kernels",
+    "imports": [
+      "import triton",
+      "import triton.language as tl"
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/spectral_heat_coefficients.py",
+    "retained": true,
+    "role": "hybrid support/spectral/emission/backward or required internal benchmark-control kernels",
+    "imports": [
+      "import triton",
+      "import triton.language as tl"
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/triangle_splat_forward.py",
+    "retained": true,
+    "role": "hybrid support/spectral/emission/backward or required internal benchmark-control kernels",
+    "imports": [
+      "import triton",
+      "import triton.language as tl"
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/__init__.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": []
+  },
+  {
+    "path": "hktex_splatting/utils/_legacy_paths.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": []
+  },
+  {
+    "path": "hktex_splatting/utils/compiler_runtime.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": [
+      "import hashlib",
+      "from importlib import metadata",
+      "import json",
+      "import os",
+      "from pathlib import Path",
+      "import sys"
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/experiment_io.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": [
+      "from __future__ import annotations",
+      "from datetime import datetime, timezone",
+      "import hashlib",
+      "import json",
+      "import os",
+      "from pathlib import Path",
+      "import socket",
+      "import subprocess",
+      "import sys",
+      "import tempfile",
+      "import uuid"
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/metrics.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": [
+      "from __future__ import annotations",
+      "import argparse",
+      "import csv",
+      "from pathlib import Path",
+      "import numpy as np",
+      "from PIL import Image",
+      "from scipy.ndimage import minimum_filter, uniform_filter",
+      "from hktex_splatting.utils.reference_assets import read_json, save_png, srgb_to_linear, write_json"
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/paths.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": [
+      "from pathlib import Path",
+      "from hktex_splatting.utils._legacy_paths import MIGRATIONS",
+      "import hashlib",
+      "import json",
+      "import hashlib",
+      "import json"
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/reference_assets.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": [
+      "from __future__ import annotations",
+      "import argparse",
+      "import ast",
+      "import hashlib",
+      "import json",
+      "import os",
+      "from pathlib import Path",
+      "import statistics",
+      "import sys",
+      "from types import SimpleNamespace",
+      "import struct",
+      "import numpy as np",
+      "import numpy as np",
+      "from PIL import Image",
+      "import numpy as np",
+      "from scripts.visualize_kernel_faces import perspective_camera_basis",
+      "import trimesh",
+      "import numpy as np",
+      "import numpy as np",
+      "import numpy as np",
+      "import socket",
+      "import torch",
+      "from importlib.metadata import PackageNotFoundError, version",
+      "from scripts.test_numba_raster import rasterize_numba as rasterize",
+      "from scripts.visualize_kernel_faces import rasterize_visible_triangles as rasterize"
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/support_debug.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": [
+      "import json",
+      "from pathlib import Path",
+      "import uuid",
+      "import numpy as np",
+      "import torch"
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/training_profile.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": [
+      "from contextlib import contextmanager, nullcontext",
+      "import json",
+      "from pathlib import Path",
+      "import resource",
+      "import time"
+    ]
+  },
+  {
+    "path": "scripts/__init__.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": []
+  },
+  {
+    "path": "scripts/albo_diffuse_from_matlab.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "from pathlib import Path",
+      "import os",
+      "import torch",
+      "import trimesh",
+      "import numpy as np",
+      "import scipy.io as sio",
+      "import h5py",
+      "from scipy.sparse import csc_matrix",
+      "from scipy.sparse import isspmatrix_csc",
+      "from hktex.modules import Mesh",
+      "from hktex.utils import load_mesh, get_anisotropic_lbo, compute_mesh_laplacian, compute_eig_laplacian, heat_diffusion, soft_step, combine_images, show_image",
+      "from hktex.rendering.vertex_colours_renderer import VertexColoursRenderer"
+    ]
+  },
+  {
+    "path": "scripts/albo_diffuse_single_kernel.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "from pathlib import Path",
+      "import os",
+      "import torch",
+      "import trimesh",
+      "import numpy as np",
+      "from hktex.modules import Mesh",
+      "from hktex.utils import load_mesh, get_anisotropic_lbo, compute_mesh_laplacian, compute_eig_laplacian, heat_diffusion, soft_step, rescaled_soft_step, combine_images, show_image",
+      "from hktex.rendering.vertex_colours_renderer import VertexColoursRenderer"
+    ]
+  },
+  {
+    "path": "scripts/analyze_benchmark_results.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import argparse",
+      "import pandas as pd",
+      "import numpy as np",
+      "import os",
+      "import sys"
+    ]
+  },
+  {
+    "path": "scripts/analyze_original_uv_storage.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "from pathlib import Path",
+      "import os",
+      "import argparse",
+      "import pandas as pd",
+      "import numpy as np",
+      "import io",
+      "import torch",
+      "import mitsuba as mi",
+      "import trimesh",
+      "from PIL import Image",
+      "from hktex.utils import load_mesh"
+    ]
+  },
+  {
+    "path": "scripts/analyze_timing_results.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import argparse",
+      "import pandas as pd",
+      "import numpy as np",
+      "import os",
+      "import sys"
+    ]
+  },
+  {
+    "path": "scripts/benchmark_vertex_colours.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "from pathlib import Path",
+      "import os",
+      "import numpy as np",
+      "import torch",
+      "import pandas as pd",
+      "import yaml",
+      "import torch.nn.functional as F",
+      "import copy",
+      "import trimesh",
+      "import io",
+      "import argparse",
+      "import mitsuba as mi",
+      "from hktex.utils import load_mesh, show_video, save_video, combine_videos, mibitmaps2torch, compute_all_image_metrics",
+      "from hktex.rendering.uv_texture_renderer import UVTextureRenderer",
+      "from hktex.rendering.vertex_colours_renderer import VertexColoursRenderer"
+    ]
+  },
+  {
+    "path": "scripts/diagnose_precomp_eigalbo.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "from pathlib import Path",
+      "import os",
+      "import torch",
+      "import numpy as np",
+      "import matplotlib.pyplot as plt",
+      "from hktex.utils import load_mesh",
+      "from hktex.utils import repr_patches",
+      "from hktex.modules import Mesh, EigenAlboInterpolation"
+    ]
+  },
+  {
+    "path": "scripts/download_and_inspect_objaverse.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "from pathlib import Path",
+      "import os",
+      "import trimesh",
+      "import mitsuba as mi",
+      "from tqdm import tqdm",
+      "from hktex.data.objaverse_downloader import ObjaverseDownloader, find_filenames",
+      "from hktex.utils import load_mesh, show_video",
+      "from hktex.rendering.uv_texture_renderer import UVTextureRenderer"
+    ]
+  },
+  {
+    "path": "scripts/eigen_albo.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import omegaconf",
+      "import numpy as np",
+      "import torch",
+      "import trimesh",
+      "from hktex.modules import EigenAlboInterpolation",
+      "from hktex.utils import load_mesh, heat_diffusion",
+      "from hktex.utils.typing import *"
+    ]
+  },
+  {
+    "path": "scripts/evecs_interps.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "from pathlib import Path",
+      "import os",
+      "import trimesh.exchange",
+      "import torch",
+      "import trimesh",
+      "import numpy as np",
+      "import matplotlib.pyplot as plt",
+      "import matplotlib.colors as mcolors",
+      "from hktex.utils import load_mesh, uniform_sampling, interpolate_barycentric_attr, big_trimesh_pcl",
+      "from hktex.rendering.heat_kernels_renderer import HeatKernelsRenderer",
+      "from hktex.modules import Mesh, HeatKernelTexture, EigenAlboInterpolation"
+    ]
+  },
+  {
+    "path": "scripts/inspect_converse.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import ast",
+      "import hashlib",
+      "import io",
+      "import json",
+      "import logging",
+      "from pathlib import Path",
+      "import struct",
+      "import sys",
+      "from types import SimpleNamespace",
+      "import numpy as np",
+      "import scipy",
+      "from scipy.sparse import coo_matrix",
+      "from scipy.sparse.csgraph import connected_components",
+      "import trimesh",
+      "from PIL import Image, ImageDraw",
+      "import PIL"
+    ]
+  },
+  {
+    "path": "scripts/kernel_modulation.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "from pathlib import Path",
+      "import os",
+      "import torch",
+      "import trimesh",
+      "import mitsuba as mi",
+      "from hktex.utils import load_mesh, combine_videos, show_video, combine_images, show_image",
+      "from hktex.utils import repr_patches",
+      "from hktex.rendering.heat_kernels_renderer import HeatKernelsRenderer",
+      "from hktex.rendering.vertex_colours_renderer import VertexColoursRenderer",
+      "from hktex.modules import Mesh, HeatKernelTexture, EigenAlboInterpolation"
+    ]
+  },
+  {
+    "path": "scripts/low_res_uv_textures.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "from pathlib import Path",
+      "import os",
+      "import numpy as np",
+      "import torch",
+      "import pandas as pd",
+      "import yaml",
+      "import torch.nn.functional as F",
+      "import trimesh",
+      "import io",
+      "from PIL import Image",
+      "from typing import Optional, Union",
+      "import tempfile",
+      "import argparse",
+      "import mitsuba as mi",
+      "from hktex.utils import load_mesh, show_video, save_video, combine_videos, mibitmaps2torch, compute_all_image_metrics",
+      "from hktex.rendering.uv_texture_renderer import UVTextureRenderer"
+    ]
+  },
+  {
+    "path": "scripts/render_hktex_pbr.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "from pathlib import Path",
+      "import os",
+      "import matplotlib.pyplot as plt",
+      "import drjit as dr",
+      "import mitsuba as mi",
+      "import time",
+      "import glob",
+      "import torch",
+      "import argparse",
+      "from omegaconf import OmegaConf",
+      "from hktex.utils import load_mesh, load_config, ExperimentConfig, show_video, save_video",
+      "from hktex.modules import Mesh, HeatKernelTexture, EigenAlboInterpolation",
+      "import hktex",
+      "import re",
+      "from hktex.modules.heat_kernel_texture_knn import HeatKernelTextureKNN",
+      "from hktex.modules.eigen_albo_knn import EigenAlboInterpolationKNN",
+      "from hktex.rendering.heat_kernels_renderer_knn import HeatKernelsRendererKNN",
+      "from hktex.rendering.heat_kernels_renderer import HeatKernelsRenderer"
+    ]
+  },
+  {
+    "path": "scripts/run_benchmark_parallel.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "import argparse",
+      "from pathlib import Path",
+      "import torch",
+      "import torch.nn.functional as F",
+      "import pandas as pd",
+      "import random",
+      "import mitsuba as mi",
+      "from ray import tune",
+      "from hktex.data.objaverse_downloader import find_filenames",
+      "from hktex.utils import mibitmaps2torch, compute_all_image_metrics",
+      "from optimisation import main",
+      "import faiss",
+      "import faiss.contrib.torch_utils",
+      "import mitsuba as mi",
+      "import torch",
+      "import faiss",
+      "import faiss.contrib.torch_utils"
+    ]
+  },
+  {
+    "path": "scripts/run_benchmark_parallel_ablation.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "import argparse",
+      "from pathlib import Path",
+      "import torch",
+      "import torch.nn.functional as F",
+      "import pandas as pd",
+      "import random",
+      "import mitsuba as mi",
+      "from ray import tune",
+      "from hktex.data.objaverse_downloader import find_filenames",
+      "from hktex.utils import mibitmaps2torch, compute_all_image_metrics",
+      "from optimisation import main",
+      "import faiss",
+      "import faiss.contrib.torch_utils",
+      "import mitsuba as mi",
+      "import torch",
+      "import faiss",
+      "import faiss.contrib.torch_utils"
+    ]
+  },
+  {
+    "path": "scripts/run_benchmark_parallel_mitsuba.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "import argparse",
+      "from pathlib import Path",
+      "import torch",
+      "import torch.nn.functional as F",
+      "import pandas as pd",
+      "import random",
+      "import mitsuba as mi",
+      "from ray import tune",
+      "from hktex.data.objaverse_downloader import find_filenames",
+      "from hktex.utils import mibitmaps2torch, compute_all_image_metrics",
+      "from optimisation import main",
+      "import faiss",
+      "import faiss.contrib.torch_utils",
+      "import mitsuba as mi",
+      "import torch",
+      "import faiss",
+      "import faiss.contrib.torch_utils"
+    ]
+  },
+  {
+    "path": "scripts/run_mlp_benchmark.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "import argparse",
+      "from pathlib import Path",
+      "import torch",
+      "import torch.nn.functional as F",
+      "import pandas as pd",
+      "import numpy as np",
+      "import traceback",
+      "import mitsuba as mi",
+      "from ray import tune",
+      "import mitsuba as mi",
+      "import torch",
+      "from hktex.utils import mibitmaps2torch, compute_all_image_metrics",
+      "from optimisation import main"
+    ]
+  },
+  {
+    "path": "scripts/run_mlp_benchmark_mitsuba.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "import argparse",
+      "from pathlib import Path",
+      "import torch",
+      "import torch.nn.functional as F",
+      "import pandas as pd",
+      "import numpy as np",
+      "import traceback",
+      "import mitsuba as mi",
+      "from ray import tune",
+      "import mitsuba as mi",
+      "import torch",
+      "from hktex.utils import mibitmaps2torch, compute_all_image_metrics",
+      "from optimisation import main"
+    ]
+  },
+  {
+    "path": "scripts/run_vertex_benchmark_mitsuba.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "import argparse",
+      "from pathlib import Path",
+      "import torch",
+      "import torch.nn.functional as F",
+      "import pandas as pd",
+      "import numpy as np",
+      "import traceback",
+      "import mitsuba as mi",
+      "from ray import tune",
+      "import mitsuba as mi",
+      "import torch",
+      "from hktex.trainers.vertex_ray_trainer import VertexRayTrainer",
+      "from hktex.utils import mibitmaps2torch, compute_all_image_metrics",
+      "from optimisation import main"
+    ]
+  },
+  {
+    "path": "scripts/setup_converse_experiment.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import argparse",
+      "from pathlib import Path"
+    ]
+  },
+  {
+    "path": "scripts/test_numba_raster.py",
+    "retained": true,
+    "role": "required production camera/raster helper (historical filename)",
+    "imports": [
+      "import argparse",
+      "from contextlib import redirect_stdout, contextmanager",
+      "import hashlib",
+      "import io",
+      "import json",
+      "import math",
+      "import os",
+      "from pathlib import Path",
+      "import platform",
+      "import sys",
+      "import time",
+      "import numpy as np",
+      "from numba import njit, typeof",
+      "from visualize_kernel_faces import perspective_camera_basis, rasterize_visible_triangles",
+      "import numpy as np",
+      "from visualize_kernel_faces import perspective_camera_basis, clip_camera_polygon",
+      "from interactive_density_knn import load_datamodule_and_trainer_only",
+      "import numba"
+    ]
+  },
+  {
+    "path": "scripts/time_base_render.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "from pathlib import Path",
+      "import time",
+      "import argparse",
+      "import numpy as np",
+      "import pandas as pd",
+      "import torch",
+      "import mitsuba as mi",
+      "import drjit as dr",
+      "from ray import tune",
+      "import hktex",
+      "from hktex.data import MeshSamplerDataModule",
+      "from hktex.trainers import BaseTrainer",
+      "from hktex.utils import load_config, seed_everything",
+      "from hktex.rendering.heat_kernels_renderer import HeatKernelsRenderer",
+      "from hktex.rendering.heat_kernels_renderer_knn import HeatKernelsRendererKNN"
+    ]
+  },
+  {
+    "path": "scripts/time_eigen_albo.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "from pathlib import Path",
+      "import time",
+      "import argparse",
+      "import numpy as np",
+      "import pandas as pd",
+      "import torch",
+      "import scipy.optimize",
+      "import gc",
+      "from ray import tune",
+      "import hktex.modules.eigen_albo as ea_module",
+      "import scipy.optimize",
+      "from hktex.modules import EigenAlboInterpolation",
+      "from hktex.utils import load_mesh",
+      "from hktex.modules import Mesh"
+    ]
+  },
+  {
+    "path": "scripts/time_low_res_uv_render.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "from pathlib import Path",
+      "import io",
+      "import time",
+      "import argparse",
+      "import tempfile",
+      "import numpy as np",
+      "import pandas as pd",
+      "import torch",
+      "import mitsuba as mi",
+      "import drjit as dr",
+      "import trimesh",
+      "import yaml",
+      "from PIL import Image",
+      "from ray import tune",
+      "from hktex.utils import load_mesh",
+      "from hktex.rendering.uv_texture_renderer import UVTextureRenderer"
+    ]
+  },
+  {
+    "path": "scripts/time_mitsuba_render.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "from pathlib import Path",
+      "import time",
+      "import argparse",
+      "import numpy as np",
+      "import pandas as pd",
+      "import torch",
+      "import mitsuba as mi",
+      "import drjit as dr",
+      "from ray import tune",
+      "import hktex",
+      "from hktex.data import MeshSamplerDataModule",
+      "from hktex.trainers import BaseTrainer",
+      "from hktex.utils import load_config, seed_everything"
+    ]
+  },
+  {
+    "path": "scripts/time_mlp_mitsuba_render.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "from pathlib import Path",
+      "import time",
+      "import argparse",
+      "import numpy as np",
+      "import pandas as pd",
+      "import torch",
+      "import mitsuba as mi",
+      "import drjit as dr",
+      "from ray import tune",
+      "import hktex",
+      "from hktex.data import MeshSamplerDataModule",
+      "from hktex.trainers import BaseTrainer",
+      "from hktex.utils import load_config, seed_everything"
+    ]
+  },
+  {
+    "path": "scripts/time_mlp_render.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "from pathlib import Path",
+      "import time",
+      "import argparse",
+      "import numpy as np",
+      "import pandas as pd",
+      "import torch",
+      "import mitsuba as mi",
+      "import drjit as dr",
+      "from ray import tune",
+      "import hktex",
+      "from hktex.data import MeshSamplerDataModule",
+      "from hktex.trainers import BaseTrainer",
+      "from hktex.utils import load_config, seed_everything"
+    ]
+  },
+  {
+    "path": "scripts/time_vertex_colours_render.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "from pathlib import Path",
+      "import io",
+      "import time",
+      "import argparse",
+      "import numpy as np",
+      "import pandas as pd",
+      "import torch",
+      "import mitsuba as mi",
+      "import drjit as dr",
+      "import trimesh",
+      "import yaml",
+      "from ray import tune",
+      "from hktex.utils import load_mesh",
+      "from hktex.rendering.vertex_colours_renderer import VertexColoursRenderer"
+    ]
+  },
+  {
+    "path": "scripts/time_vertex_ray_render.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import os",
+      "from pathlib import Path",
+      "import time",
+      "import argparse",
+      "import numpy as np",
+      "import pandas as pd",
+      "import torch",
+      "import mitsuba as mi",
+      "import drjit as dr",
+      "from ray import tune",
+      "import hktex",
+      "from hktex.data import MeshSamplerDataModule",
+      "from hktex.trainers import BaseTrainer",
+      "from hktex.utils import load_config, seed_everything"
+    ]
+  },
+  {
+    "path": "scripts/tune_hparams.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import yaml",
+      "from pathlib import Path",
+      "import os",
+      "import argparse",
+      "import traceback",
+      "import torch",
+      "import torch.nn.functional as F",
+      "from tqdm import tqdm",
+      "import optuna",
+      "from ray import tune",
+      "from ray.tune.search.optuna import OptunaSearch",
+      "from ray.tune.search import ConcurrencyLimiter",
+      "import mitsuba as mi",
+      "from hktex.utils import mibitmaps2torch, compute_all_image_metrics",
+      "from optimisation import main"
+    ]
+  },
+  {
+    "path": "scripts/tune_hparams_ablation.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import yaml",
+      "from pathlib import Path",
+      "import os",
+      "import argparse",
+      "import traceback",
+      "import torch",
+      "import torch.nn.functional as F",
+      "from tqdm import tqdm",
+      "import optuna",
+      "from ray import tune",
+      "from ray.tune.search.optuna import OptunaSearch",
+      "from ray.tune.search import ConcurrencyLimiter",
+      "import mitsuba as mi",
+      "from hktex.utils import mibitmaps2torch, compute_all_image_metrics",
+      "from optimisation import main"
+    ]
+  },
+  {
+    "path": "scripts/tune_hparams_mitsuba.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import yaml",
+      "from pathlib import Path",
+      "import os",
+      "import mitsuba as mi",
+      "import argparse",
+      "import traceback",
+      "import torch",
+      "import torch.nn.functional as F",
+      "from tqdm import tqdm",
+      "import optuna",
+      "from ray import tune",
+      "from ray.tune.search.optuna import OptunaSearch",
+      "from ray.tune.search import ConcurrencyLimiter",
+      "from hktex.utils import mibitmaps2torch, compute_all_image_metrics",
+      "from optimisation import main"
+    ]
+  },
+  {
+    "path": "scripts/tune_hparams_pcl.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import sys",
+      "import yaml",
+      "from pathlib import Path",
+      "import os",
+      "import argparse",
+      "import traceback",
+      "import torch",
+      "import torch.nn.functional as F",
+      "from tqdm import tqdm",
+      "import drjit as dr",
+      "import optuna",
+      "from ray import tune",
+      "from ray.tune.search.optuna import OptunaSearch",
+      "from ray.tune.search import ConcurrencyLimiter",
+      "import mitsuba as mi",
+      "from hktex.utils import mibitmaps2torch, compute_all_image_metrics",
+      "from optimisation import main"
+    ]
+  },
+  {
+    "path": "scripts/utils.py",
+    "retained": true,
+    "role": "original HKTex preprocessing/training/benchmark command or its helper",
+    "imports": [
+      "import math",
+      "import trimesh",
+      "import torch",
+      "import numpy as np",
+      "from hktex.utils import load_mesh, get_anisotropic_lbo, compute_eig_laplacian, heat_diffusion"
+    ]
+  },
+  {
+    "path": "scripts/visualize_kernel_faces.py",
+    "retained": true,
+    "role": "required production camera/raster helper (historical filename)",
+    "imports": [
+      "import math",
+      "import numpy as np",
+      "import numpy as np",
+      "import numpy as np"
+    ]
+  },
+  {
+    "path": "splatting_script/__init__.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": []
+  },
+  {
+    "path": "splatting_script/benchmarks/__init__.py",
+    "retained": true,
+    "role": "native/hybrid benchmark/profiler/report or historical-result reader",
+    "imports": []
+  },
+  {
+    "path": "splatting_script/benchmarks/compare_training.py",
+    "retained": true,
+    "role": "native/hybrid benchmark/profiler/report or historical-result reader",
+    "imports": [
+      "import sys as _entry_sys",
+      "from pathlib import Path as _EntryPath",
+      "import argparse",
+      "import hashlib",
+      "import json",
+      "import math",
+      "from pathlib import Path",
+      "import sys",
+      "from splatting_script.benchmarks.training_research import scaling_plan",
+      "from hktex_splatting.utils.compiler_runtime import matched_policy",
+      "from splatting_script.benchmarks.pipeline_workflow import main as run",
+      "from splatting_script.benchmarks.pipeline_report import main as run",
+      "from splatting_script.benchmarks.training_research import compare_runs, plot_comparison"
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/direct_tiles.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "from importlib import import_module as _import_module",
+      "import sys as _sys",
+      "from pathlib import Path as _Path"
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/legacy/__init__.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": []
+  },
+  {
+    "path": "splatting_script/benchmarks/legacy/train_forward.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "import sys",
+      "from pathlib import Path",
+      "from hktex_splatting.trainers.forward import main, parser"
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/pipeline_profile.py",
+    "retained": true,
+    "role": "native/hybrid benchmark/profiler/report or historical-result reader",
+    "imports": [
+      "from contextlib import contextmanager, ExitStack",
+      "from functools import wraps",
+      "import time",
+      "import weakref",
+      "import threading",
+      "from unittest.mock import patch",
+      "from hktex_splatting.modules.spectral_heat_field import LiveHeatField",
+      "from hktex_splatting.knn_heat.packed_support import PreparedSupport",
+      "from hktex_splatting.knn_heat.triangle_kernel_support import ResidentSupportGeometry, FusedResidentSupportGeometry",
+      "from hktex_splatting.rendering.mesh_visibility_raster import BVHRaster",
+      "from hktex_splatting.rendering import heat_kernel_splatting as direct_tiles",
+      "from hktex_splatting.triton import spectral_heat_coefficients as coefficient_gpu, heat_kernel_splatting as direct_gpu, triangle_splat_forward as gpu, resident_gpu, runtime_splat_kernels as runtime_counts",
+      "from unittest.mock import patch"
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/pipeline_report.py",
+    "retained": true,
+    "role": "native/hybrid benchmark/profiler/report or historical-result reader",
+    "imports": [
+      "import argparse",
+      "import csv",
+      "import json",
+      "from pathlib import Path",
+      "from splatting_script.benchmarks.pipeline_trace import distribution",
+      "import matplotlib",
+      "import matplotlib.pyplot as plt"
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/pipeline_trace.py",
+    "retained": true,
+    "role": "native/hybrid benchmark/profiler/report or historical-result reader",
+    "imports": [
+      "import math",
+      "import statistics",
+      "from bisect import bisect_right"
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/pipeline_workflow.py",
+    "retained": true,
+    "role": "native/hybrid benchmark/profiler/report or historical-result reader",
+    "imports": [
+      "import argparse",
+      "import json",
+      "from pathlib import Path",
+      "import re",
+      "import subprocess",
+      "import sys",
+      "import time",
+      "from hktex_splatting.utils.paths import ROOT",
+      "from hktex_splatting.utils.experiment_io import gpu_guard",
+      "from splatting_script.benchmarks.pipeline_report import report"
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/profile_training_report.py",
+    "retained": true,
+    "role": "native/hybrid benchmark/profiler/report or historical-result reader",
+    "imports": [
+      "import sys as _entry_sys",
+      "from pathlib import Path as _EntryPath",
+      "import argparse",
+      "import json",
+      "from pathlib import Path",
+      "import statistics",
+      "from hktex_splatting.utils.experiment_io import write_json"
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/renderer_comparison.py",
+    "retained": true,
+    "role": "native/hybrid benchmark/profiler/report or historical-result reader",
+    "imports": [
+      "import argparse",
+      "from contextlib import nullcontext",
+      "import hashlib",
+      "import json",
+      "from pathlib import Path",
+      "import statistics",
+      "import time",
+      "import pstats",
+      "from hktex_splatting.utils.training_profile import _union_us",
+      "import torch",
+      "import torch",
+      "import torch",
+      "import os",
+      "from hktex_splatting.utils.experiment_io import gpu_guard, write_json",
+      "from types import SimpleNamespace as NS",
+      "from hktex_splatting.utils.experiment_io import configure_cache, unique_output, install_import_paths, write_json, MESH",
+      "import numpy as np",
+      "import torch",
+      "from interactive_density_knn import load_datamodule_and_trainer_only",
+      "from hktex.trainers.utils import parse_optimizers_and_schedulers",
+      "from hktex.utils import seed_everything",
+      "from hktex_splatting.modules.spectral_heat_field import LiveHeatField",
+      "from hktex_splatting.rendering.heat_kernel_splatting import DirectTileRenderer, TileSurface",
+      "from hktex_splatting.rendering.prepared_geometry import PreparedGeometry",
+      "from hktex_splatting.rendering.resident import ResidentDispatchGeometry, build_scene",
+      "from hktex_splatting.rendering.mesh_visibility_raster import BVHRaster",
+      "from hktex_splatting.rendering.reference_mesh import texture_sample",
+      "from hktex_splatting.rendering.cameras import cameras",
+      "from hktex_splatting.utils.reference_assets import load_cpu_mesh",
+      "from contextlib import ExitStack",
+      "import threading",
+      "import math",
+      "from contextlib import ExitStack",
+      "from splatting_script.benchmarks.training_research import provenance",
+      "from hktex_splatting.utils.experiment_io import ROOT",
+      "from splatting_script.benchmarks.pipeline_profile import PipelineProfiler",
+      "from hktex_splatting.rendering.splat_autograd import splat",
+      "from splatting_script.benchmarks.pipeline_profile import validate_observer",
+      "from splatting_script.benchmarks.training_research import capture_rng, restore_rng, provenance, model_hash, run_training",
+      "from hktex_splatting.utils.experiment_io import ROOT",
+      "import cProfile",
+      "from hktex_splatting.utils.training_profile import summarize_trace",
+      "from splatting_script.benchmarks.training_research import stage_activity",
+      "from splatting_script.benchmarks.training_research import check_initialization",
+      "from splatting_script.benchmarks.pipeline_trace import analyze_trace",
+      "from splatting_script.benchmarks.training_research import parameter_health",
+      "from triton import knobs",
+      "from hktex_splatting.knn_heat.triangle_kernel_support import ResidentSupportGeometry",
+      "from unittest.mock import patch",
+      "from unittest.mock import patch",
+      "from hktex_splatting.triton import runtime_splat_kernels as gpu",
+      "from hktex_splatting.triton import triangle_splat_forward as gpu"
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/training_research.py",
+    "retained": true,
+    "role": "native/hybrid benchmark/profiler/report or historical-result reader",
+    "imports": [
+      "from contextlib import contextmanager",
+      "import hashlib",
+      "import json",
+      "import math",
+      "from pathlib import Path",
+      "import random",
+      "import statistics",
+      "import subprocess",
+      "import time",
+      "import numpy as np",
+      "import numpy as np",
+      "from omegaconf import OmegaConf",
+      "import numpy as np",
+      "from hktex_splatting.utils.experiment_io import write_json",
+      "import numpy as np",
+      "import matplotlib",
+      "import matplotlib.pyplot as plt",
+      "import numpy as np",
+      "from hktex_splatting.utils.experiment_io import ROOT, MESH",
+      "from hktex_splatting.utils.reference_assets import load_cpu_mesh",
+      "from hktex_splatting.rendering.mesh_visibility_raster import BVHRaster",
+      "from hktex_splatting.rendering.cameras import cameras",
+      "from PIL import Image"
+    ]
+  },
+  {
+    "path": "splatting_script/configs/__init__.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": []
+  },
+  {
+    "path": "splatting_script/experiments/__init__.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": []
+  },
+  {
+    "path": "splatting_script/experiments/compare_backends.py",
+    "retained": true,
+    "role": "primary command/configuration or shared asset/provenance/metrics/diagnostic utility",
+    "imports": [
+      "import argparse",
+      "from splatting_script.benchmarks.renderer_comparison import main as run",
+      "from splatting_script.benchmarks.renderer_comparison import parser as harness_parser"
+    ]
+  },
+  {
+    "path": "splatting_script/experiments/train_forward.py",
+    "retained": false,
+    "role": "retired optional implementation/alias",
+    "imports": [
+      "import sys",
+      "from pathlib import Path",
+      "from splatting_script.benchmarks.legacy.train_forward import main, parser"
+    ]
+  },
+  {
+    "path": "splatting_script/maintenance/__init__.py",
+    "retained": true,
+    "role": "verified research-source archive recovery",
+    "imports": []
+  },
+  {
+    "path": "splatting_script/maintenance/recovery.py",
+    "retained": true,
+    "role": "verified research-source archive recovery",
+    "imports": [
+      "import argparse",
+      "import hashlib",
+      "import json",
+      "from pathlib import Path",
+      "import tarfile",
+      "import os"
+    ]
+  }
+]

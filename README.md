@@ -16,6 +16,10 @@ Heat Kernel Textures (HKTex) are an intrinsic texture representation for triangu
 
 HKTex avoids UV seams, distortion, wasted atlas space, duplicated vertices, and uneven texel resolution. The representation can be fitted from an existing texture or from multi-view images and integrates with physically based rendering.
 
+> **Heat-Kernel Splatting extension:** For the triangle-supported, tile-based renderer,
+> its pipeline, training commands and HKTex comparisons, see the separate
+> [Heat-Kernel Splatting README](hktex_splatting/README.md).
+
 ## Highlights
 
 - Intrinsic, UV-free texturing for arbitrary triangular meshes.
@@ -30,8 +34,9 @@ The environments below target Python 3.11, Linux, and an NVIDIA GPU with a CUDA 
 
 ### HKTex
 
-To create the environment, open a terminal and run the the following commands to install the necessary dependencies:
-```bash 
+To create the environment, open a terminal and run the following commands to install the necessary dependencies:
+
+```bash
 mamba create -n hktex python=3.11.13
 mamba activate hktex
 
@@ -98,91 +103,21 @@ python optimisation.py \
 
 Use `--gpu 0` to choose a GPU, or set `CUDA_VISIBLE_DEVICES` before launching the command.
 
-## Triangle-Based Heat Kernel Splatting
+## Data and preprocessing
 
-This fork adds an extension that renders trained HKTex heat kernels using triangles of a connected mesh. It loads the trained model and evaluated mesh from an experiment, selects kernel-supported triangles, and produces a splat image alongside an HKTex reference image.
+Provide your own textured triangular mesh and keep any external material and
+texture files at the paths referenced by the mesh. Override `data.mesh_path`
+in the configuration; the example Spot paths are placeholders for local assets.
 
-### 1. Set up the environment
+Original HKTex computes and caches the spectral precomputation beside the mesh
+when it is absent, unless the configuration requires an existing archive. Keep
+that archive matched to the exact mesh and preprocessing settings. Rendering
+and training reuse the precomputed eigensystem.
 
-Follow the **HKTex** installation instructions above, including Mitsuba, FAISS GPU, Trimesh/rtree, and Pillow. Add Numba to that environment:
-
-```bash
-mamba activate hktex
-python -m pip install numba==0.61.2
-```
-
-Run the following commands from the repository root in the same terminal. An NVIDIA GPU with a compatible CUDA driver is still required for model loading and heat-kernel evaluation; the Numba visibility rasterizer runs on the CPU. The examples use `--gpu 0`; an existing nonempty `CUDA_VISIBLE_DEVICES` setting takes precedence.
-
-### 2. Prepare a trained experiment
-
-Supply your own connected, textured triangle mesh, including any external texture files. Mesh assets and trained checkpoints are not bundled in this repository. Replace the mesh path below with your file, then train using the supplied KNN configuration:
-
-```bash
-MESH="data/my_connected_mesh.glb"
-
-python optimisation.py \
-  --config configs/texture_hktex_knn.yaml \
-  --gpu 0 \
-  data.mesh_path="$MESH" \
-  tag=triangle_splat_example \
-  use_timestamp=false \
-  optim.save_model=true \
-  optim.save_model_name=model.pt
-```
-
-After successful completion, the experiment directory `outputs/uv-texture-fitting/triangle_splat_example/` contains `configs/parsed.yaml` and `ckpts/model.pt`. Keep the mesh and its textures at the paths recorded in the saved configuration. The standard training configuration also generates a matching `<mesh-stem>_eigen_albo_principal_curvatures.pt` file beside the mesh when absent; keep this precomputation with the mesh.
-
-If you already have a trained experiment, skip training and set `EXPERIMENT` below to its directory. It must contain the saved configuration and `ckpts/<optim.save_model_name>`; its saved mesh paths must resolve on your machine. The renderer requires outer KNN 50, inner KNN 30, three RGB channels, and `power_diffused_diracs=1`; the configuration above provides these settings.
-
-### 3. Generate or load the kernel-to-face cache
-
-The cache records which mesh faces each trained kernel affects. Generate it once for your experiment and support cutoff:
-
-```bash
-EXPERIMENT="outputs/uv-texture-fitting/triangle_splat_example"
-CACHE="outputs/triangle_splat/triangle_splat_example_cutoff_0.005.npz"
-CUTOFF=0.005
-
-python scripts/triangle_splat_renderer.py \
-  --experiment "$EXPERIMENT" \
-  --kernel-face-cache "$CACHE" \
-  --cutoff "$CUTOFF" \
-  --precompute-cache \
-  --gpu 0
-```
-
-If you already have a matching cache, set `CACHE` to its `.npz` path and skip the precomputation command. Use the same cutoff when rendering. Regenerate the cache if the checkpoint, mesh, saved configuration, or cutoff changes; changing only the camera does not require a new cache.
-
-### 4. Render with the Numba backend
-
-```bash
-python scripts/triangle_splat_renderer.py \
-  --experiment "$EXPERIMENT" \
-  --kernel-face-cache "$CACHE" \
-  --cutoff "$CUTOFF" \
-  --visibility-mode raster \
-  --raster-backend numba \
-  --splat-raster-mode reuse \
-  --camera-position 0 3 0 \
-  --camera-look-at 0 0 0 \
-  --image-width 128 \
-  --image-height 128 \
-  --fov-y 45 \
-  --gpu 0
-```
-
-Set `--camera-position` and `--camera-look-at` in the evaluated mesh's coordinates. Change `--image-width` and `--image-height` for the output resolution, and `--fov-y` for the vertical field of view in degrees. `--cutoff` controls the kernel support used to select triangles; lowering it includes more faces.
-
-### 5. Find the images
-
-Images are written to `outputs/triangle_splat/`:
-
-- `splat_render.png`: triangle-based heat-kernel splat image.
-- `reference.png`: ray-rendered HKTex reference image using the selected kernels.
-- `diff.png`: absolute RGB difference image.
-- `triangle_mask.png`: green pixels showing the splat's triangle coverage.
-
-Each rendering run overwrites these four images.
+For the Converse experiment layout, see the [asset guide](data/converse/README.md).
+The HKS comparison harness requires prepared assets and recorded camera definitions;
+its [setup instructions](hktex_splatting/README.md#2-prepare-the-inputs) describe
+those additional requirements.
 
 ## Configurations and experiments
 
@@ -196,24 +131,30 @@ The main experiment families are defined in [`configs/`](configs/):
 | `multiview_vertex_ray.yaml` | Run the Mitsuba ray rendering based vertex-colour baseline. |
 | `ablations/` | Reproduce individual HKTex ablations. |
 
-Benchmarking, timing, visualisation, and paper-figure utilities live in [`scripts/`](scripts/).
+Original training, preprocessing and benchmark utilities remain in [scripts/](scripts/).
+For matched original HKTex versus Heat-Kernel Splatting training, timing, memory
+and quality comparisons, follow the [HKS guide](hktex_splatting/README.md#compare-original-hktex-and-hks).
 
 ## Repository structure
 
 ```text
-hktex/
-├── configs/                 # Experiment and rendering configurations
-├── hktex/
+.
+├── configs/                 # Original experiment and rendering configurations
+├── hktex/                   # Original HKTex implementation
 │   ├── data/                # Mesh and observation data modules
-│   ├── density_controllers/ # Adaptive density controllers
-│   ├── knn_heat/            # KNN heat-kernel implementation
-│   ├── modules/             # Texture, geometry, and interpolation models
+│   ├── density_controllers/ # Adaptive pruning and densification
+│   ├── knn_heat/            # Pointwise KNN heat-kernel evaluation
+│   ├── modules/             # Texture, geometry, spectral models and optimizers
 │   ├── rendering/           # Differentiable and Mitsuba renderers
-│   ├── trainers/            # Optimisation workflows
+│   ├── trainers/            # Original optimization workflows
 │   └── utils/
-├── scripts/                 # Benchmarks, analyses, and visualisations
-├── optimisation.py          # Main experiment entry point
-└── interactive_*.py.        # Interactive Jupyter Notebook entry points
+├── hktex_splatting/          # Heat-Kernel Splatting extension and its README
+├── splatting_script/        # Matched training, benchmarks and profiling
+├── scripts/                 # Original preprocessing and benchmark utilities
+├── data/                    # Local mesh, texture and spectral assets
+├── docs/                    # Architecture, protocols and recovery records
+├── optimisation.py          # Original HKTex experiment entry point
+└── interactive_*.py         # Interactive experiment helpers
 ```
 
 ## Citation
@@ -242,4 +183,3 @@ If you use HKTex in your research, please cite:
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-

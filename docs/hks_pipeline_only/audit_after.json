@@ -1,0 +1,2570 @@
+[
+  {
+    "path": "hktex_splatting/__init__.py",
+    "imports": [
+      "from importlib import import_module"
+    ],
+    "definitions": [
+      {
+        "name": "__getattr__",
+        "line": 21,
+        "end_line": 26,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/__main__.py",
+    "imports": [
+      "from hktex_splatting.cli import main"
+    ],
+    "definitions": []
+  },
+  {
+    "path": "hktex_splatting/cli.py",
+    "imports": [
+      "from splatting_script.experiments.compare_backends import main as run"
+    ],
+    "definitions": [
+      {
+        "name": "main",
+        "line": 6,
+        "end_line": 8,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/knn_heat/__init__.py",
+    "imports": [],
+    "definitions": []
+  },
+  {
+    "path": "hktex_splatting/knn_heat/packed_support.py",
+    "imports": [
+      "import numpy as np",
+      "import torch"
+    ],
+    "definitions": [
+      {
+        "name": "PreparedSupport",
+        "line": 9,
+        "end_line": 72,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "__init__",
+        "line": 16,
+        "end_line": 37,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "matches",
+        "line": 39,
+        "end_line": 42,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "candidate_rows",
+        "line": 45,
+        "end_line": 72,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/knn_heat/triangle_kernel_support.py",
+    "imports": [
+      "from contextlib import nullcontext",
+      "from dataclasses import dataclass",
+      "import numpy as np",
+      "import torch",
+      "import triton",
+      "from hktex_splatting.knn_heat.packed_support import PreparedSupport",
+      "from hktex_splatting.triton import resident_gpu"
+    ],
+    "definitions": [
+      {
+        "name": "_scope",
+        "line": 13,
+        "end_line": 14,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "check_sizes",
+        "line": 17,
+        "end_line": 29,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "DeviceSupport",
+        "line": 33,
+        "end_line": 52,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ResidentSupportGeometry",
+        "line": 55,
+        "end_line": 126,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FusedResidentSupportGeometry",
+        "line": 129,
+        "end_line": 287,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "__post_init__",
+        "line": 46,
+        "end_line": 48,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "valid",
+        "line": 50,
+        "end_line": 52,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__init__",
+        "line": 57,
+        "end_line": 66,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "valid",
+        "line": 68,
+        "end_line": 73,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "select",
+        "line": 76,
+        "end_line": 126,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__init__",
+        "line": 138,
+        "end_line": 143,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "valid",
+        "line": 145,
+        "end_line": 147,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "single_block_topk",
+        "line": 150,
+        "end_line": 158,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "candidate_rows",
+        "line": 161,
+        "end_line": 221,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "select",
+        "line": 224,
+        "end_line": 287,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/modules/__init__.py",
+    "imports": [],
+    "definitions": []
+  },
+  {
+    "path": "hktex_splatting/modules/spectral_heat_coefficients.py",
+    "imports": [
+      "import torch",
+      "from torch.autograd.function import once_differentiable",
+      "import triton",
+      "from hktex_splatting.triton import spectral_heat_coefficients as coefficient_gpu"
+    ],
+    "definitions": [
+      {
+        "name": "_Coefficients",
+        "line": 11,
+        "end_line": 56,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "fused_coefficients",
+        "line": 59,
+        "end_line": 87,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "forward",
+        "line": 14,
+        "end_line": 36,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "backward",
+        "line": 40,
+        "end_line": 56,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/modules/spectral_heat_field.py",
+    "imports": [
+      "from dataclasses import dataclass",
+      "from contextlib import nullcontext",
+      "import numpy as np",
+      "import torch",
+      "from torch.utils.checkpoint import checkpoint",
+      "from hktex_splatting.knn_heat.triangle_kernel_support import ResidentSupportGeometry, FusedResidentSupportGeometry",
+      "from hktex_splatting.modules.spectral_heat_coefficients import fused_coefficients"
+    ],
+    "definitions": [
+      {
+        "name": "SourceState",
+        "line": 13,
+        "end_line": 20,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "LiveHeatField",
+        "line": 23,
+        "end_line": 153,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "__init__",
+        "line": 25,
+        "end_line": 41,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "prepare_support",
+        "line": 43,
+        "end_line": 51,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "sources",
+        "line": 53,
+        "end_line": 75,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_chunk",
+        "line": 77,
+        "end_line": 89,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "coefficients",
+        "line": 92,
+        "end_line": 136,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "support",
+        "line": 139,
+        "end_line": 153,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/__init__.py",
+    "imports": [],
+    "definitions": []
+  },
+  {
+    "path": "hktex_splatting/rendering/cameras.py",
+    "imports": [
+      "import copy",
+      "from hktex_splatting.utils.experiment_io import CAMERAS, VIEWS",
+      "from hktex_splatting.utils.reference_assets import camera as original_camera",
+      "import numpy as np"
+    ],
+    "definitions": [
+      {
+        "name": "camera",
+        "line": 8,
+        "end_line": 13,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "cameras",
+        "line": 15,
+        "end_line": 24,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/fast_raster.py",
+    "imports": [
+      "import math",
+      "import numpy as np",
+      "from numba import njit",
+      "from scripts.visualize_kernel_faces import perspective_camera_basis"
+    ],
+    "definitions": [
+      {
+        "name": "_fast_kernel",
+        "line": 12,
+        "end_line": 119,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "StaticRaster",
+        "line": 122,
+        "end_line": 145,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "__init__",
+        "line": 123,
+        "end_line": 127,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "all_buffers",
+        "line": 129,
+        "end_line": 139,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__call__",
+        "line": 141,
+        "end_line": 145,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/gpu_dispatch.py",
+    "imports": [
+      "from dataclasses import dataclass",
+      "import numpy as np",
+      "import torch",
+      "from hktex_splatting.rendering.triangle_splat_reference import Dispatch"
+    ],
+    "definitions": [
+      {
+        "name": "DeviceDispatchGeometry",
+        "line": 10,
+        "end_line": 43,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DeviceDispatch",
+        "line": 47,
+        "end_line": 78,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "__init__",
+        "line": 12,
+        "end_line": 30,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "valid",
+        "line": 32,
+        "end_line": 39,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "device_bytes",
+        "line": 42,
+        "end_line": 43,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "shape",
+        "line": 55,
+        "end_line": 55,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "tile_size",
+        "line": 58,
+        "end_line": 58,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "record_origin",
+        "line": 60,
+        "end_line": 62,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "batches",
+        "line": 64,
+        "end_line": 67,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "records",
+        "line": 69,
+        "end_line": 78,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "tensor",
+        "line": 19,
+        "end_line": 19,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "imports": [
+      "from contextlib import nullcontext",
+      "from dataclasses import dataclass",
+      "from types import SimpleNamespace",
+      "import copy",
+      "import numpy as np",
+      "import torch",
+      "from hktex_splatting.rendering.splat_autograd import _Splat",
+      "from hktex_splatting.modules.spectral_heat_coefficients import fused_coefficients",
+      "from hktex_splatting.triton.heat_kernel_splatting import group_triangle_work",
+      "from hktex_splatting.triton.heat_kernel_splatting import hybrid_forward",
+      "from hktex_splatting.rendering.prepared_geometry import PreparedGeometry",
+      "from hktex_splatting.rendering.resident import ResidentDispatchGeometry",
+      "from hktex_splatting.knn_heat.triangle_kernel_support import ResidentSupportGeometry",
+      "from hktex_splatting.rendering.resident import ResidentTopology",
+      "from hktex_splatting.knn_heat.triangle_kernel_support import FusedResidentSupportGeometry",
+      "from hktex_splatting.utils.support_debug import SupportDebugger"
+    ],
+    "definitions": [
+      {
+        "name": "scope",
+        "line": 15,
+        "end_line": 17,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "TileSurface",
+        "line": 20,
+        "end_line": 83,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "KernelTileWork",
+        "line": 87,
+        "end_line": 98,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "full_spectrum_work",
+        "line": 102,
+        "end_line": 110,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_pixel_coefficients",
+        "line": 113,
+        "end_line": 124,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_responses_from_coefficients",
+        "line": 127,
+        "end_line": 134,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_torch_splat_responses",
+        "line": 138,
+        "end_line": 152,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "TriangleTileWork",
+        "line": 156,
+        "end_line": 184,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "triangle_tile_work",
+        "line": 188,
+        "end_line": 234,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_hybrid_eager",
+        "line": 237,
+        "end_line": 269,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_HybridSplat",
+        "line": 272,
+        "end_line": 280,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "_hybrid_device",
+        "line": 283,
+        "end_line": 287,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "DirectTileRenderer",
+        "line": 290,
+        "end_line": 493,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "__init__",
+        "line": 26,
+        "end_line": 78,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "valid",
+        "line": 80,
+        "end_line": 83,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "counts",
+        "line": 93,
+        "end_line": 94,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "device_bytes",
+        "line": 97,
+        "end_line": 98,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "kernels",
+        "line": 171,
+        "end_line": 171,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "bary",
+        "line": 173,
+        "end_line": 173,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "face_ids",
+        "line": 175,
+        "end_line": 175,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "counts",
+        "line": 177,
+        "end_line": 180,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "device_bytes",
+        "line": 182,
+        "end_line": 184,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "forward",
+        "line": 275,
+        "end_line": 280,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__init__",
+        "line": 297,
+        "end_line": 336,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__call__",
+        "line": 338,
+        "end_line": 351,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_splat",
+        "line": 354,
+        "end_line": 407,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_hybrid",
+        "line": 409,
+        "end_line": 493,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/mesh_visibility_raster.py",
+    "imports": [
+      "import math",
+      "import numpy as np",
+      "from hktex_splatting.rendering.fast_raster import StaticRaster, _fast_kernel",
+      "from scripts.visualize_kernel_faces import perspective_camera_basis"
+    ],
+    "definitions": [
+      {
+        "name": "BVHRaster",
+        "line": 11,
+        "end_line": 64,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "__init__",
+        "line": 13,
+        "end_line": 34,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "all_buffers",
+        "line": 36,
+        "end_line": 64,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build",
+        "line": 18,
+        "end_line": 31,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/native_reference.py",
+    "imports": [
+      "from __future__ import annotations",
+      "import argparse",
+      "import json",
+      "import os",
+      "import time",
+      "from pathlib import Path",
+      "from hktex_splatting.utils.reference_assets import CACHE, EXPERIMENT, ROOT, camera, check_repetitions, common_parser, geometry_digest, raster_surface, require_gpu_allocation, runtime_cache_environment, save_npy, save_png, save_surface, sha256, stats, write_json",
+      "import numpy as np",
+      "import torch",
+      "from interactive_density_knn import load_datamodule_and_trainer_only",
+      "from hktex.modules.heat_kernel_texture_knn import HeatKernelTextureKNN",
+      "from hktex.modules.eigen_albo_knn import EigenAlboInterpolationKNN"
+    ],
+    "definitions": [
+      {
+        "name": "validate_knn_settings",
+        "line": 32,
+        "end_line": 36,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "render",
+        "line": 39,
+        "end_line": 161,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 164,
+        "end_line": 174,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "frame",
+        "line": 96,
+        "end_line": 121,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/prepared_geometry.py",
+    "imports": [
+      "import numpy as np",
+      "import torch",
+      "from hktex_splatting.rendering.triangle_splat_reference import dispatch",
+      "from hktex_splatting.rendering.triangle_heat_map import FaceMap"
+    ],
+    "definitions": [
+      {
+        "name": "PreparedGeometry",
+        "line": 11,
+        "end_line": 66,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "__init__",
+        "line": 12,
+        "end_line": 44,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_cpu_arrays",
+        "line": 46,
+        "end_line": 49,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "cpu_bytes",
+        "line": 52,
+        "end_line": 53,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "device_bytes",
+        "line": 56,
+        "end_line": 57,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "dispatch_backend",
+        "line": 60,
+        "end_line": 61,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "buffers_valid",
+        "line": 63,
+        "end_line": 66,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "tensor",
+        "line": 35,
+        "end_line": 36,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/reference_mesh.py",
+    "imports": [
+      "from __future__ import annotations",
+      "import time",
+      "from hktex_splatting.utils.reference_assets import MESH, camera, check_repetitions, common_parser, geometry_digest, glb_json, load_cpu_mesh, raster_surface, save_npy, save_png, save_surface, sha256, stats, write_json",
+      "import numpy as np",
+      "import trimesh",
+      "import numpy as np"
+    ],
+    "definitions": [
+      {
+        "name": "texture_sample",
+        "line": 26,
+        "end_line": 69,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "render",
+        "line": 72,
+        "end_line": 131,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 134,
+        "end_line": 137,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "frame",
+        "line": 97,
+        "end_line": 103,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/resident.py",
+    "imports": [
+      "import torch",
+      "import triton",
+      "from hktex_splatting.rendering.gpu_dispatch import DeviceDispatchGeometry, DeviceDispatch",
+      "from hktex_splatting.rendering.splat_autograd import PreparedScene",
+      "from hktex_splatting.knn_heat.triangle_kernel_support import check_sizes, _scope"
+    ],
+    "definitions": [
+      {
+        "name": "ResidentDispatchGeometry",
+        "line": 14,
+        "end_line": 29,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ResidentTopology",
+        "line": 32,
+        "end_line": 56,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "build_scene",
+        "line": 60,
+        "end_line": 96,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__init__",
+        "line": 15,
+        "end_line": 21,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "valid",
+        "line": 23,
+        "end_line": 25,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "device_bytes",
+        "line": 28,
+        "end_line": 29,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__init__",
+        "line": 33,
+        "end_line": 42,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "matches",
+        "line": 44,
+        "end_line": 52,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "device_bytes",
+        "line": 55,
+        "end_line": 56,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/splat_autograd.py",
+    "imports": [
+      "from dataclasses import dataclass",
+      "import torch",
+      "from torch.autograd.function import once_differentiable",
+      "from hktex_splatting.rendering.triangle_splat_reference import Dispatch",
+      "from hktex_splatting.triton import triangle_splat_forward as gpu, heat_kernel_backward as backward, runtime_splat_kernels as runtime_kernels"
+    ],
+    "definitions": [
+      {
+        "name": "PreparedScene",
+        "line": 18,
+        "end_line": 52,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "_Splat",
+        "line": 55,
+        "end_line": 115,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "splat",
+        "line": 118,
+        "end_line": 147,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "device_bytes",
+        "line": 39,
+        "end_line": 46,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "record_origin",
+        "line": 48,
+        "end_line": 52,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "forward",
+        "line": 58,
+        "end_line": 89,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "backward",
+        "line": 93,
+        "end_line": 115,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_heat_map.py",
+    "imports": [
+      "from dataclasses import dataclass",
+      "import numpy as np"
+    ],
+    "definitions": [
+      {
+        "name": "FaceMap",
+        "line": 10,
+        "end_line": 31,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "validate",
+        "line": 18,
+        "end_line": 27,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "bytes",
+        "line": 30,
+        "end_line": 31,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_reference.py",
+    "imports": [
+      "from dataclasses import dataclass",
+      "import numpy as np"
+    ],
+    "definitions": [
+      {
+        "name": "Dispatch",
+        "line": 10,
+        "end_line": 42,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "kernel_face_order",
+        "line": 45,
+        "end_line": 55,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "dispatch",
+        "line": 58,
+        "end_line": 87,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "fragments",
+        "line": 23,
+        "end_line": 23,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "batches",
+        "line": 25,
+        "end_line": 35,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "records",
+        "line": 37,
+        "end_line": 42,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/__init__.py",
+    "imports": [],
+    "definitions": []
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_backward.py",
+    "imports": [
+      "import triton",
+      "import triton.language as tl"
+    ],
+    "definitions": [
+      {
+        "name": "reconstruct_backward",
+        "line": 10,
+        "end_line": 37,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "emit_backward",
+        "line": 41,
+        "end_line": 99,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "imports": [
+      "import torch",
+      "import triton",
+      "import triton.language as tl",
+      "from contextlib import nullcontext",
+      "from hktex_splatting.triton import triangle_splat_forward as gpu, runtime_splat_kernels as runtime_counts"
+    ],
+    "definitions": [
+      {
+        "name": "_group_triangle_work",
+        "line": 11,
+        "end_line": 23,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "group_triangle_work",
+        "line": 26,
+        "end_line": 29,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_hybrid_emit",
+        "line": 33,
+        "end_line": 88,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "hybrid_forward",
+        "line": 91,
+        "end_line": 129,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "stage",
+        "line": 96,
+        "end_line": 97,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "imports": [
+      "import triton",
+      "import triton.language as tl",
+      "from triton.language.extra.cuda import libdevice as cuda_libdevice"
+    ],
+    "definitions": [
+      {
+        "name": "pack_support",
+        "line": 10,
+        "end_line": 19,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_support_limit",
+        "line": 23,
+        "end_line": 27,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "filter_support_scores",
+        "line": 31,
+        "end_line": 39,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "pack_support_rows",
+        "line": 44,
+        "end_line": 61,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_warp_sum_rows",
+        "line": 65,
+        "end_line": 71,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "support_distances",
+        "line": 76,
+        "end_line": 101,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "select_support_rows",
+        "line": 106,
+        "end_line": 141,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "support_scan_blocks",
+        "line": 146,
+        "end_line": 159,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "support_scan_totals",
+        "line": 163,
+        "end_line": 173,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "support_scan_offsets",
+        "line": 177,
+        "end_line": 184,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/runtime_splat_kernels.py",
+    "imports": [
+      "import triton",
+      "import triton.language as tl"
+    ],
+    "definitions": [
+      {
+        "name": "reconstruct",
+        "line": 9,
+        "end_line": 20,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "reconstruct_backward",
+        "line": 24,
+        "end_line": 51,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "emit_backward",
+        "line": 55,
+        "end_line": 113,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/spectral_heat_coefficients.py",
+    "imports": [
+      "import triton",
+      "import triton.language as tl"
+    ],
+    "definitions": [
+      {
+        "name": "coefficients_forward",
+        "line": 10,
+        "end_line": 45,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "coefficients_backward",
+        "line": 49,
+        "end_line": 116,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/triton/triangle_splat_forward.py",
+    "imports": [
+      "import triton",
+      "import triton.language as tl"
+    ],
+    "definitions": [
+      {
+        "name": "emit",
+        "line": 10,
+        "end_line": 33,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "merge",
+        "line": 37,
+        "end_line": 60,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "reconstruct",
+        "line": 64,
+        "end_line": 75,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/__init__.py",
+    "imports": [],
+    "definitions": []
+  },
+  {
+    "path": "hktex_splatting/utils/_legacy_paths.py",
+    "imports": [],
+    "definitions": []
+  },
+  {
+    "path": "hktex_splatting/utils/compiler_runtime.py",
+    "imports": [],
+    "definitions": [
+      {
+        "name": "matched_policy",
+        "line": 6,
+        "end_line": 12,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/experiment_io.py",
+    "imports": [
+      "from __future__ import annotations",
+      "from datetime import datetime, timezone",
+      "import hashlib",
+      "import json",
+      "import os",
+      "from pathlib import Path",
+      "import socket",
+      "import subprocess",
+      "import sys",
+      "import tempfile",
+      "import uuid"
+    ],
+    "definitions": [
+      {
+        "name": "install_import_paths",
+        "line": 30,
+        "end_line": 33,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "digest",
+        "line": 36,
+        "end_line": 41,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "input_identities",
+        "line": 44,
+        "end_line": 49,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "read_json",
+        "line": 52,
+        "end_line": 53,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "write_json",
+        "line": 56,
+        "end_line": 67,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "unique_output",
+        "line": 70,
+        "end_line": 75,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "configure_cache",
+        "line": 78,
+        "end_line": 95,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "gpu_guard",
+        "line": 98,
+        "end_line": 105,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "protected_snapshot",
+        "line": 108,
+        "end_line": 135,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "verify_snapshot",
+        "line": 138,
+        "end_line": 149,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/metrics.py",
+    "imports": [
+      "from __future__ import annotations",
+      "import argparse",
+      "import csv",
+      "from pathlib import Path",
+      "import numpy as np",
+      "from PIL import Image",
+      "from scipy.ndimage import minimum_filter, uniform_filter",
+      "from hktex_splatting.utils.reference_assets import read_json, save_png, srgb_to_linear, write_json"
+    ],
+    "definitions": [
+      {
+        "name": "ssim_foreground",
+        "line": 20,
+        "end_line": 38,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "metrics",
+        "line": 41,
+        "end_line": 68,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "load_rgb",
+        "line": 71,
+        "end_line": 73,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "roi_mask",
+        "line": 76,
+        "end_line": 83,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "validate_alignment",
+        "line": 86,
+        "end_line": 115,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "evaluate",
+        "line": 118,
+        "end_line": 164,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 167,
+        "end_line": 174,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/paths.py",
+    "imports": [
+      "from pathlib import Path",
+      "from hktex_splatting.utils._legacy_paths import MIGRATIONS",
+      "import hashlib",
+      "import json",
+      "import hashlib",
+      "import json"
+    ],
+    "definitions": [
+      {
+        "name": "implementation_sources",
+        "line": 16,
+        "end_line": 17,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "research_path",
+        "line": 20,
+        "end_line": 30,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "frozen_source_path",
+        "line": 33,
+        "end_line": 58,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "recorded_source_path",
+        "line": 61,
+        "end_line": 83,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "recorded_identity",
+        "line": 86,
+        "end_line": 96,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/reference_assets.py",
+    "imports": [
+      "from __future__ import annotations",
+      "import argparse",
+      "import ast",
+      "import hashlib",
+      "import json",
+      "import os",
+      "from pathlib import Path",
+      "import statistics",
+      "import sys",
+      "from types import SimpleNamespace",
+      "import struct",
+      "import numpy as np",
+      "import numpy as np",
+      "from PIL import Image",
+      "import numpy as np",
+      "from scripts.visualize_kernel_faces import perspective_camera_basis",
+      "import trimesh",
+      "import numpy as np",
+      "import numpy as np",
+      "import numpy as np",
+      "import socket",
+      "import torch",
+      "from importlib.metadata import PackageNotFoundError, version",
+      "from scripts.test_numba_raster import rasterize_numba as rasterize",
+      "from scripts.visualize_kernel_faces import rasterize_visible_triangles as rasterize"
+    ],
+    "definitions": [
+      {
+        "name": "read_json",
+        "line": 27,
+        "end_line": 28,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "glb_json",
+        "line": 31,
+        "end_line": 38,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "write_json",
+        "line": 41,
+        "end_line": 46,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "sha256",
+        "line": 49,
+        "end_line": 54,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "save_npy",
+        "line": 57,
+        "end_line": 60,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "save_png",
+        "line": 63,
+        "end_line": 72,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "stats",
+        "line": 75,
+        "end_line": 79,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "camera",
+        "line": 82,
+        "end_line": 96,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "camera_basis",
+        "line": 99,
+        "end_line": 101,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "common_parser",
+        "line": 104,
+        "end_line": 113,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "load_cpu_mesh",
+        "line": 116,
+        "end_line": 132,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "geometry_digest",
+        "line": 135,
+        "end_line": 142,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "raster_surface",
+        "line": 145,
+        "end_line": 154,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "save_surface",
+        "line": 157,
+        "end_line": 161,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "check_repetitions",
+        "line": 164,
+        "end_line": 166,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "srgb_to_linear",
+        "line": 169,
+        "end_line": 171,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "require_gpu_allocation",
+        "line": 174,
+        "end_line": 180,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "runtime_cache_environment",
+        "line": 183,
+        "end_line": 188,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "input_identity",
+        "line": 191,
+        "end_line": 193,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "library_versions",
+        "line": 196,
+        "end_line": 204,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/support_debug.py",
+    "imports": [
+      "import json",
+      "from pathlib import Path",
+      "import uuid",
+      "import numpy as np",
+      "import torch"
+    ],
+    "definitions": [
+      {
+        "name": "support_errors",
+        "line": 12,
+        "end_line": 46,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "SupportDebugger",
+        "line": 49,
+        "end_line": 82,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "__init__",
+        "line": 51,
+        "end_line": 53,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "check",
+        "line": 55,
+        "end_line": 82,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "hktex_splatting/utils/training_profile.py",
+    "imports": [
+      "import json",
+      "from pathlib import Path"
+    ],
+    "definitions": [
+      {
+        "name": "_union_us",
+        "line": 9,
+        "end_line": 15,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "summarize_trace",
+        "line": 18,
+        "end_line": 99,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "enclosing",
+        "line": 37,
+        "end_line": 44,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "splatting_script/__init__.py",
+    "imports": [],
+    "definitions": []
+  },
+  {
+    "path": "splatting_script/benchmarks/__init__.py",
+    "imports": [],
+    "definitions": []
+  },
+  {
+    "path": "splatting_script/benchmarks/compare_training.py",
+    "imports": [
+      "import sys as _entry_sys",
+      "from pathlib import Path as _EntryPath",
+      "import argparse",
+      "import hashlib",
+      "import json",
+      "import math",
+      "from pathlib import Path",
+      "import sys",
+      "from splatting_script.benchmarks.training_research import scaling_plan",
+      "from hktex_splatting.utils.compiler_runtime import matched_policy",
+      "from splatting_script.benchmarks.pipeline_workflow import main as run",
+      "from splatting_script.benchmarks.pipeline_report import main as run",
+      "from splatting_script.benchmarks.training_research import compare_runs, plot_comparison"
+    ],
+    "definitions": [
+      {
+        "name": "native_split_psnr",
+        "line": 17,
+        "end_line": 24,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "compare",
+        "line": 27,
+        "end_line": 87,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 90,
+        "end_line": 130,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/pipeline_profile.py",
+    "imports": [
+      "from contextlib import contextmanager, ExitStack",
+      "from functools import wraps",
+      "import time",
+      "import weakref",
+      "import threading",
+      "from unittest.mock import patch",
+      "from hktex_splatting.modules.spectral_heat_field import LiveHeatField",
+      "from hktex_splatting.knn_heat.packed_support import PreparedSupport",
+      "from hktex_splatting.knn_heat.triangle_kernel_support import ResidentSupportGeometry, FusedResidentSupportGeometry",
+      "from hktex_splatting.rendering.mesh_visibility_raster import BVHRaster",
+      "from hktex_splatting.rendering import heat_kernel_splatting as direct_tiles",
+      "from hktex_splatting.triton import spectral_heat_coefficients as coefficient_gpu, heat_kernel_splatting as direct_gpu, triangle_splat_forward as gpu, resident_gpu, runtime_splat_kernels as runtime_counts",
+      "from unittest.mock import patch"
+    ],
+    "definitions": [
+      {
+        "name": "storage_record",
+        "line": 12,
+        "end_line": 14,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "tensor_storages",
+        "line": 17,
+        "end_line": 29,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_Saved",
+        "line": 32,
+        "end_line": 43,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "_Kernel",
+        "line": 46,
+        "end_line": 58,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "PipelineProfiler",
+        "line": 61,
+        "end_line": 283,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "validate_observer",
+        "line": 286,
+        "end_line": 316,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "visit",
+        "line": 20,
+        "end_line": 27,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__init__",
+        "line": 33,
+        "end_line": 36,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__del__",
+        "line": 38,
+        "end_line": 43,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__init__",
+        "line": 47,
+        "end_line": 48,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__getattr__",
+        "line": 50,
+        "end_line": 51,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__getitem__",
+        "line": 53,
+        "end_line": 58,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__init__",
+        "line": 62,
+        "end_line": 68,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "labels",
+        "line": 71,
+        "end_line": 73,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "allocator",
+        "line": 75,
+        "end_line": 83,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "scope",
+        "line": 86,
+        "end_line": 107,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "begin",
+        "line": 109,
+        "end_line": 110,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "saved_tensors",
+        "line": 113,
+        "end_line": 118,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "retained",
+        "line": 120,
+        "end_line": 126,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "finish",
+        "line": 128,
+        "end_line": 153,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "residency",
+        "line": 155,
+        "end_line": 170,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "wrap",
+        "line": 172,
+        "end_line": 183,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "support_result",
+        "line": 185,
+        "end_line": 197,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "hybrid_result",
+        "line": 199,
+        "end_line": 216,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "install",
+        "line": 219,
+        "end_line": 274,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "export",
+        "line": 276,
+        "end_line": 283,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "call",
+        "line": 55,
+        "end_line": 57,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "pack",
+        "line": 114,
+        "end_line": 116,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "call",
+        "line": 177,
+        "end_line": 182,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/pipeline_report.py",
+    "imports": [
+      "import argparse",
+      "import csv",
+      "import json",
+      "from pathlib import Path",
+      "from splatting_script.benchmarks.pipeline_trace import distribution",
+      "import matplotlib",
+      "import matplotlib.pyplot as plt"
+    ],
+    "definitions": [
+      {
+        "name": "read",
+        "line": 13,
+        "end_line": 14,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "number",
+        "line": 17,
+        "end_line": 18,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "workload",
+        "line": 21,
+        "end_line": 22,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "controls_match",
+        "line": 25,
+        "end_line": 48,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "collect",
+        "line": 51,
+        "end_line": 145,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "write_csv",
+        "line": 148,
+        "end_line": 151,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "markdown",
+        "line": 154,
+        "end_line": 214,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "plots",
+        "line": 217,
+        "end_line": 258,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "report",
+        "line": 261,
+        "end_line": 296,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 299,
+        "end_line": 302,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "flat_csv",
+        "line": 286,
+        "end_line": 289,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/pipeline_trace.py",
+    "imports": [
+      "import math",
+      "import statistics",
+      "from bisect import bisect_right"
+    ],
+    "definitions": [
+      {
+        "name": "distribution",
+        "line": 33,
+        "end_line": 37,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "union",
+        "line": 40,
+        "end_line": 46,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "duration",
+        "line": 49,
+        "end_line": 50,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "subtract",
+        "line": 53,
+        "end_line": 62,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "classify",
+        "line": 65,
+        "end_line": 81,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "analyze_trace",
+        "line": 84,
+        "end_line": 265,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "gpu_stats",
+        "line": 158,
+        "end_line": 169,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/pipeline_workflow.py",
+    "imports": [
+      "import argparse",
+      "import json",
+      "from pathlib import Path",
+      "import re",
+      "import subprocess",
+      "import sys",
+      "import time",
+      "from hktex_splatting.utils.paths import ROOT",
+      "from hktex_splatting.utils.experiment_io import gpu_guard",
+      "from splatting_script.benchmarks.pipeline_report import report"
+    ],
+    "definitions": [
+      {
+        "name": "plan",
+        "line": 14,
+        "end_line": 49,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "classify_failure",
+        "line": 52,
+        "end_line": 60,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "run_process",
+        "line": 63,
+        "end_line": 79,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "execute",
+        "line": 82,
+        "end_line": 111,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 114,
+        "end_line": 141,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "save",
+        "line": 86,
+        "end_line": 86,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/profile_training_report.py",
+    "imports": [
+      "import sys as _entry_sys",
+      "from pathlib import Path as _EntryPath",
+      "import argparse",
+      "import json",
+      "from pathlib import Path",
+      "import statistics",
+      "from hktex_splatting.utils.experiment_io import write_json"
+    ],
+    "definitions": [
+      {
+        "name": "review",
+        "line": 16,
+        "end_line": 68,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 71,
+        "end_line": 83,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/renderer_comparison.py",
+    "imports": [
+      "import argparse",
+      "from contextlib import nullcontext",
+      "import hashlib",
+      "import json",
+      "from pathlib import Path",
+      "import statistics",
+      "import time",
+      "import pstats",
+      "from hktex_splatting.utils.training_profile import _union_us",
+      "import torch",
+      "import torch",
+      "import torch",
+      "import os",
+      "from hktex_splatting.utils.experiment_io import gpu_guard, write_json",
+      "from types import SimpleNamespace as NS",
+      "from hktex_splatting.utils.experiment_io import configure_cache, unique_output, install_import_paths, write_json, MESH",
+      "import numpy as np",
+      "import torch",
+      "from interactive_density_knn import load_datamodule_and_trainer_only",
+      "from hktex.trainers.utils import parse_optimizers_and_schedulers",
+      "from hktex.utils import seed_everything",
+      "from hktex_splatting.modules.spectral_heat_field import LiveHeatField",
+      "from hktex_splatting.rendering.heat_kernel_splatting import DirectTileRenderer, TileSurface",
+      "from hktex_splatting.rendering.prepared_geometry import PreparedGeometry",
+      "from hktex_splatting.rendering.resident import ResidentDispatchGeometry, build_scene",
+      "from hktex_splatting.rendering.mesh_visibility_raster import BVHRaster",
+      "from hktex_splatting.rendering.reference_mesh import texture_sample",
+      "from hktex_splatting.rendering.cameras import cameras",
+      "from hktex_splatting.utils.reference_assets import load_cpu_mesh",
+      "from contextlib import ExitStack",
+      "import threading",
+      "import math",
+      "from contextlib import ExitStack",
+      "from splatting_script.benchmarks.training_research import provenance",
+      "from hktex_splatting.utils.experiment_io import ROOT",
+      "from splatting_script.benchmarks.pipeline_profile import PipelineProfiler",
+      "from hktex_splatting.rendering.splat_autograd import splat",
+      "from splatting_script.benchmarks.pipeline_profile import validate_observer",
+      "from splatting_script.benchmarks.training_research import capture_rng, restore_rng, provenance, model_hash, run_training",
+      "from hktex_splatting.utils.experiment_io import ROOT",
+      "import cProfile",
+      "from hktex_splatting.utils.training_profile import summarize_trace",
+      "from splatting_script.benchmarks.training_research import stage_activity",
+      "from splatting_script.benchmarks.training_research import check_initialization",
+      "from splatting_script.benchmarks.pipeline_trace import analyze_trace",
+      "from splatting_script.benchmarks.training_research import parameter_health",
+      "from triton import knobs",
+      "from hktex_splatting.knn_heat.triangle_kernel_support import ResidentSupportGeometry",
+      "from unittest.mock import patch",
+      "from unittest.mock import patch",
+      "from hktex_splatting.triton import runtime_splat_kernels as gpu",
+      "from hktex_splatting.triton import triangle_splat_forward as gpu"
+    ],
+    "definitions": [
+      {
+        "name": "parser",
+        "line": 15,
+        "end_line": 64,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "JITCacheDiagnostics",
+        "line": 67,
+        "end_line": 171,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "latency_summary",
+        "line": 174,
+        "end_line": 186,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "host_profile_summary",
+        "line": 189,
+        "end_line": 199,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "candidate_profile_summary",
+        "line": 202,
+        "end_line": 291,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "selection_diagnostics",
+        "line": 294,
+        "end_line": 309,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "reset_model_for_comparison",
+        "line": 312,
+        "end_line": 320,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "differences",
+        "line": 323,
+        "end_line": 325,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "common_response_differences",
+        "line": 328,
+        "end_line": 351,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "full_coverage_omissions",
+        "line": 354,
+        "end_line": 376,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 379,
+        "end_line": 431,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_execute",
+        "line": 434,
+        "end_line": 1015,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__init__",
+        "line": 74,
+        "end_line": 83,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "set_phase",
+        "line": 85,
+        "end_line": 86,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "snapshot",
+        "line": 88,
+        "end_line": 90,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_identity",
+        "line": 93,
+        "end_line": 97,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_constant",
+        "line": 100,
+        "end_line": 105,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_before",
+        "line": 107,
+        "end_line": 124,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_after",
+        "line": 126,
+        "end_line": 137,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__enter__",
+        "line": 139,
+        "end_line": 151,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__exit__",
+        "line": 153,
+        "end_line": 155,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "report",
+        "line": 157,
+        "end_line": 171,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "block",
+        "line": 177,
+        "end_line": 181,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "classify",
+        "line": 211,
+        "end_line": 231,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "metrics",
+        "line": 260,
+        "end_line": 275,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "make_geometry",
+        "line": 526,
+        "end_line": 547,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "reset",
+        "line": 552,
+        "end_line": 557,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "annotation",
+        "line": 558,
+        "end_line": 559,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "resident_rgb",
+        "line": 560,
+        "end_line": 568,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "render",
+        "line": 569,
+        "end_line": 658,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "uninstrumented_step",
+        "line": 659,
+        "end_line": 671,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "profiled_step",
+        "line": 673,
+        "end_line": 698,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "support_stats",
+        "line": 844,
+        "end_line": 849,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "positive_ids",
+        "line": 767,
+        "end_line": 769,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "capture_coefficients",
+        "line": 602,
+        "end_line": 605,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "Capture",
+        "line": 606,
+        "end_line": 612,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "capture_search",
+        "line": 638,
+        "end_line": 642,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "__getitem__",
+        "line": 607,
+        "end_line": 612,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "call",
+        "line": 609,
+        "end_line": 611,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "splatting_script/benchmarks/training_research.py",
+    "imports": [
+      "from contextlib import contextmanager",
+      "import hashlib",
+      "import json",
+      "import math",
+      "from pathlib import Path",
+      "import random",
+      "import statistics",
+      "import subprocess",
+      "import time",
+      "import numpy as np",
+      "import numpy as np",
+      "from omegaconf import OmegaConf",
+      "import numpy as np",
+      "from hktex_splatting.utils.experiment_io import write_json",
+      "import numpy as np",
+      "import matplotlib",
+      "import matplotlib.pyplot as plt",
+      "import numpy as np",
+      "from hktex_splatting.utils.experiment_io import ROOT, MESH",
+      "from hktex_splatting.utils.reference_assets import load_cpu_mesh",
+      "from hktex_splatting.rendering.mesh_visibility_raster import BVHRaster",
+      "from hktex_splatting.rendering.cameras import cameras",
+      "from PIL import Image"
+    ],
+    "definitions": [
+      {
+        "name": "file_identity",
+        "line": 19,
+        "end_line": 25,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "model_hash",
+        "line": 28,
+        "end_line": 33,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "capture_rng",
+        "line": 36,
+        "end_line": 40,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "restore_rng",
+        "line": 43,
+        "end_line": 49,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "preserve_rng",
+        "line": 53,
+        "end_line": 58,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "check_initialization",
+        "line": 61,
+        "end_line": 70,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "provenance",
+        "line": 73,
+        "end_line": 116,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "aggregate_quality",
+        "line": 119,
+        "end_line": 124,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "first_crossings",
+        "line": 127,
+        "end_line": 135,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "parameter_health",
+        "line": 138,
+        "end_line": 167,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "run_training",
+        "line": 170,
+        "end_line": 319,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "stage_activity",
+        "line": 322,
+        "end_line": 360,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "compare_runs",
+        "line": 363,
+        "end_line": 434,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "plot_comparison",
+        "line": 437,
+        "end_line": 459,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "scaling_plan",
+        "line": 462,
+        "end_line": 508,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "git",
+        "line": 77,
+        "end_line": 78,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "update_peak",
+        "line": 186,
+        "end_line": 189,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "evaluate",
+        "line": 191,
+        "end_line": 230,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "checkpoint",
+        "line": 232,
+        "end_line": 244,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "splatting_script/configs/__init__.py",
+    "imports": [],
+    "definitions": []
+  },
+  {
+    "path": "splatting_script/experiments/__init__.py",
+    "imports": [],
+    "definitions": []
+  },
+  {
+    "path": "splatting_script/experiments/compare_backends.py",
+    "imports": [
+      "import argparse",
+      "from splatting_script.benchmarks.renderer_comparison import main as run",
+      "from splatting_script.benchmarks.renderer_comparison import parser as harness_parser"
+    ],
+    "definitions": [
+      {
+        "name": "main",
+        "line": 10,
+        "end_line": 29,
+        "kind": "FunctionDef"
+      }
+    ]
+  },
+  {
+    "path": "splatting_script/maintenance/__init__.py",
+    "imports": [],
+    "definitions": []
+  },
+  {
+    "path": "splatting_script/maintenance/recovery.py",
+    "imports": [
+      "import argparse",
+      "import hashlib",
+      "import json",
+      "from pathlib import Path",
+      "import tarfile",
+      "import os"
+    ],
+    "definitions": [
+      {
+        "name": "digest",
+        "line": 15,
+        "end_line": 19,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "safe_path",
+        "line": 22,
+        "end_line": 29,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "records",
+        "line": 32,
+        "end_line": 40,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "verify",
+        "line": 43,
+        "end_line": 86,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 89,
+        "end_line": 98,
+        "kind": "FunctionDef"
+      }
+    ]
+  }
+]

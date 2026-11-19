@@ -1,0 +1,20 @@
+[
+  "hktex_splatting/rendering/heat_kernel_splatting.py",
+  "hktex_splatting/triton/heat_kernel_splatting.py",
+  "hktex_splatting/rendering/triangle_heat_map.py",
+  "hktex_splatting/rendering/triangle_splat_reference.py",
+  "hktex_splatting/rendering/gpu_dispatch.py",
+  "hktex_splatting/rendering/splat_autograd.py",
+  "hktex_splatting/knn_heat/packed_support.py",
+  "hktex_splatting/rendering/prepared_geometry.py",
+  "hktex_splatting/rendering/resident.py",
+  "hktex_splatting/triton/resident_gpu.py",
+  "hktex_splatting/utils/training_profile.py",
+  "hktex_splatting/modules/spectral_heat_field.py",
+  "hktex_splatting/cli.py",
+  "splatting_script/experiments/compare_backends.py",
+  "splatting_script/benchmarks/renderer_comparison.py",
+  "splatting_script/benchmarks/pipeline_workflow.py",
+  "hktex_splatting/utils/compiler_runtime.py",
+  "hktex_splatting/utils/paths.py"
+]

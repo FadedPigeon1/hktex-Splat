@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "missing_initial_fails_before_torch": true,
+  "preview_accepts_example_paths": true,
+  "existing_initial_reaches_allocation_guard": true,
+  "new_initialization_command_preview": true,
+  "render_and_step_asts_unchanged": true,
+  "git_index_unchanged": true,
+  "gpu_execution": false
+}

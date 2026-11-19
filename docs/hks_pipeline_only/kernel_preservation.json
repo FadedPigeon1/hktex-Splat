@@ -1,0 +1,112 @@
+[
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "function": "pack_support",
+    "definition_sha256": "adbdded27df91f9db98ace829304796e4bb090572c13cbe6c1dbb650f107c2c4"
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "function": "_support_limit",
+    "definition_sha256": "2eb3a4fe7788bd107827a76768f628a5a22dce7eab3c6820cd8bbbcd93dd0062"
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "function": "filter_support_scores",
+    "definition_sha256": "8c03f9ebb5b6fe56b82fc08230ac4a88c304c81079800a0558d6f8fdadaf9f68"
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "function": "pack_support_rows",
+    "definition_sha256": "b3186e054056912c524f957b944f459c0666ab08d322ed178ddf0317b9a7cf24"
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "function": "_warp_sum_rows",
+    "definition_sha256": "d2f8d8ffd5b20dc7f1208e371019b91696cfc0d3c2bf3776daa50786c8aa825a"
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "function": "support_distances",
+    "definition_sha256": "488f9f0574560c99fd3c7e90cee87646fe7d123f0d160ee5b90a4e0c836166b1"
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "function": "select_support_rows",
+    "definition_sha256": "549e9d7cf4315aa3eb39d3279bd5cac723318c01933dbfb95437f3f5009b184c"
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "function": "support_scan_blocks",
+    "definition_sha256": "d0bfe5916840c58ca5985bfabd6cd8db982678e27e35d0f5619bc45c87ac14e7"
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "function": "support_scan_totals",
+    "definition_sha256": "f92c437778793786c9ef5a0f00f3c0864bc4bd8902e32291ee3197886079a865"
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "function": "support_scan_offsets",
+    "definition_sha256": "a13acb86064cc117ee44312bdedf1506d0d19edb129116353262fbd238696a66"
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "function": "_group_triangle_work",
+    "definition_sha256": "643ff11595200789378933c76a25f7c7d5ebd20600a1d7fdb3908bd734d192c5"
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "function": "_hybrid_emit",
+    "definition_sha256": "156ad14ec971fbed6872cf24f3b67b94c6ae602aafab4a85528a2c3d42f52085"
+  },
+  {
+    "path": "hktex_splatting/triton/spectral_heat_coefficients.py",
+    "function": "coefficients_forward",
+    "definition_sha256": "ba8086af397ec7fe756b07e9e1aeefc660ad5f59f4196b8e0056db632d6b003b"
+  },
+  {
+    "path": "hktex_splatting/triton/spectral_heat_coefficients.py",
+    "function": "coefficients_backward",
+    "definition_sha256": "f02641d0447c5d4563e689616024d206140bbea706944f9c37fffc0b7fd88985"
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_backward.py",
+    "function": "reconstruct_backward",
+    "definition_sha256": "f52eda5e630691a11ae645ace4c93b1f28102e3b28c1f810b3a574b63dc89374"
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_backward.py",
+    "function": "emit_backward",
+    "definition_sha256": "6d923ba80c0c3b7ff6cedb85297cf5babe1d747cc0f6294a713a50f439b229aa"
+  },
+  {
+    "path": "hktex_splatting/triton/runtime_splat_kernels.py",
+    "function": "reconstruct",
+    "definition_sha256": "a36bb8acda9c40e3e7017c817a1f977714540d829e06f3f6e4222b1e3f49fe70"
+  },
+  {
+    "path": "hktex_splatting/triton/runtime_splat_kernels.py",
+    "function": "reconstruct_backward",
+    "definition_sha256": "309e7308cbc029edbd4532ecc241142308868b9b43c8efd7eea433f4d766b43a"
+  },
+  {
+    "path": "hktex_splatting/triton/runtime_splat_kernels.py",
+    "function": "emit_backward",
+    "definition_sha256": "bafe93dd772f450fa96c1b53cb4c4422120a4c7c48dec04e410570bfb3071a33"
+  },
+  {
+    "path": "hktex_splatting/triton/triangle_splat_forward.py",
+    "function": "emit",
+    "definition_sha256": "04175d27c86db829e47992c83d4c2581cba1601afbef21c298e2de8a57bd5a57"
+  },
+  {
+    "path": "hktex_splatting/triton/triangle_splat_forward.py",
+    "function": "merge",
+    "definition_sha256": "fa6c35f09c8423df7168a55948cb2e2542147cd3b40379a9e4a5d9cae2a96b14"
+  },
+  {
+    "path": "hktex_splatting/triton/triangle_splat_forward.py",
+    "function": "reconstruct",
+    "definition_sha256": "5dab716c8c21b9a3346b29fa493ab29d5a6bcb7de39c6f99be3f53ba22af82a3"
+  }
+]

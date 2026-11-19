@@ -1,0 +1,476 @@
+{
+  "official": "https://github.com/circle-group/hktex",
+  "commit": "9e942972c5411a364f12563eb6864520f9effe70",
+  "files": {
+    "configs/multiview_hktex_render.yaml": {
+      "upstream_sha256": "3f2ffff00084347b67691e75b1ae20396f30ac7e86b075c6739935a067b437d0",
+      "local_sha256": "3f2ffff00084347b67691e75b1ae20396f30ac7e86b075c6739935a067b437d0",
+      "role": "original"
+    },
+    "configs/render_ray.yaml": {
+      "upstream_sha256": "98c30b65b5b5ac212dacf2a573cf2539eac9e3700a84d95b307ba342cd1b2b3c",
+      "local_sha256": "98c30b65b5b5ac212dacf2a573cf2539eac9e3700a84d95b307ba342cd1b2b3c",
+      "role": "original"
+    },
+    "hktex/__init__.py": {
+      "upstream_sha256": "2a368e6851c011c8a19914c806f93a72cb9861b02341370853428adaa69ed1d2",
+      "local_sha256": "2a368e6851c011c8a19914c806f93a72cb9861b02341370853428adaa69ed1d2",
+      "role": "original"
+    },
+    "hktex/data/__init__.py": {
+      "upstream_sha256": "3688641c091e7437d36ef2e10cd3c5d94c2dadbcb7cc025e4767b16a4689b436",
+      "local_sha256": "3688641c091e7437d36ef2e10cd3c5d94c2dadbcb7cc025e4767b16a4689b436",
+      "role": "original"
+    },
+    "hktex/data/base.py": {
+      "upstream_sha256": "0f54cc8775933edce9ce47ae9dfceab8ca4a2ce8caa51d527f2438e9615b9293",
+      "local_sha256": "0f54cc8775933edce9ce47ae9dfceab8ca4a2ce8caa51d527f2438e9615b9293",
+      "role": "original"
+    },
+    "hktex/data/camera_sampler.py": {
+      "upstream_sha256": "71730066432249bbb01008626239e9c28f6e6d873ca3d2cf09a3d349d9a6a766",
+      "local_sha256": "71730066432249bbb01008626239e9c28f6e6d873ca3d2cf09a3d349d9a6a766",
+      "role": "original"
+    },
+    "hktex/data/importance_sampling_strategy.py": {
+      "upstream_sha256": "62890132231b3124f09c3d97376145417773725a0e79fa53ac01d111ad0f0bf9",
+      "local_sha256": "62890132231b3124f09c3d97376145417773725a0e79fa53ac01d111ad0f0bf9",
+      "role": "original"
+    },
+    "hktex/data/known_heat_vertex_colours.py": {
+      "upstream_sha256": "cc1e30a865e1005a3d0b7cce717584360a42373aa6516030ba57eec8a90c9523",
+      "local_sha256": "cc1e30a865e1005a3d0b7cce717584360a42373aa6516030ba57eec8a90c9523",
+      "role": "original"
+    },
+    "hktex/data/objaverse_downloader.py": {
+      "upstream_sha256": "d85f1b0cec01b7fe56aeb378e541fd34a610bf063dbd309b5506b27081f892c4",
+      "local_sha256": "d85f1b0cec01b7fe56aeb378e541fd34a610bf063dbd309b5506b27081f892c4",
+      "role": "original"
+    },
+    "hktex/data/uv_texture_sampler.py": {
+      "upstream_sha256": "7011ed9725835f5b274ec02fb61fbb574dcc6b9e98c37b72341d3463f5b4c5ac",
+      "local_sha256": "7011ed9725835f5b274ec02fb61fbb574dcc6b9e98c37b72341d3463f5b4c5ac",
+      "role": "original"
+    },
+    "hktex/data/vertex_colours.py": {
+      "upstream_sha256": "888308156f7ad2a5f6717eb70c16bc4aa873495f0b68dd73405e8ec38f377ac9",
+      "local_sha256": "888308156f7ad2a5f6717eb70c16bc4aa873495f0b68dd73405e8ec38f377ac9",
+      "role": "original"
+    },
+    "hktex/density_controllers/__init__.py": {
+      "upstream_sha256": "16a16037598c31490e8bf6098ebdc2ca8bfa62a85550ed92ec1c64d9255f5cfe",
+      "local_sha256": "16a16037598c31490e8bf6098ebdc2ca8bfa62a85550ed92ec1c64d9255f5cfe",
+      "role": "original"
+    },
+    "hktex/density_controllers/base.py": {
+      "upstream_sha256": "40261a1a1136f6af74569967812eb2e1658fab004bfeb1dc247393122237154d",
+      "local_sha256": "40261a1a1136f6af74569967812eb2e1658fab004bfeb1dc247393122237154d",
+      "role": "original"
+    },
+    "hktex/density_controllers/error_densification.py": {
+      "upstream_sha256": "dde95c2e8a67424a49b9f5f2b4a98eccdce92892c823e054bf33753e9236063c",
+      "local_sha256": "dde95c2e8a67424a49b9f5f2b4a98eccdce92892c823e054bf33753e9236063c",
+      "role": "original"
+    },
+    "hktex/density_controllers/importance_pruning.py": {
+      "upstream_sha256": "dce603d58de17efddaddc6b12a80be2a17ac2e4cfc7c8b21df4d22a572becbb9",
+      "local_sha256": "dce603d58de17efddaddc6b12a80be2a17ac2e4cfc7c8b21df4d22a572becbb9",
+      "role": "original"
+    },
+    "hktex/density_controllers/utils.py": {
+      "upstream_sha256": "5249ce3438447584b50a60352d120fcedee7feacb387fc61be9205874a8f0d41",
+      "local_sha256": "5249ce3438447584b50a60352d120fcedee7feacb387fc61be9205874a8f0d41",
+      "role": "original"
+    },
+    "hktex/knn_heat/__init__.py": {
+      "upstream_sha256": "5276fbb391f51e14e7d909f779bfdcee497ed955ab4a65b5975801ff9adeb075",
+      "local_sha256": "5276fbb391f51e14e7d909f779bfdcee497ed955ab4a65b5975801ff9adeb075",
+      "role": "original"
+    },
+    "hktex/knn_heat/knn_heat/__init__.py": {
+      "upstream_sha256": "56af31d0b502bcc5ac5e6faa7297d523be13b1bcbea8225b264544dd81c6fa57",
+      "local_sha256": "56af31d0b502bcc5ac5e6faa7297d523be13b1bcbea8225b264544dd81c6fa57",
+      "role": "original"
+    },
+    "hktex/knn_heat/knn_heat/_ops/__init__.py": {
+      "upstream_sha256": "b7978d1d80de8bb3a11fe3f27dc6b96164083c3b4cf4404caf1f7cc7a44e7e46",
+      "local_sha256": "b7978d1d80de8bb3a11fe3f27dc6b96164083c3b4cf4404caf1f7cc7a44e7e46",
+      "role": "original"
+    },
+    "hktex/knn_heat/knn_heat/_ops/distance.py": {
+      "upstream_sha256": "38c85b527111935fe57db8c83db66bbab5b6744c82cc237a19360afd7fde67bb",
+      "local_sha256": "38c85b527111935fe57db8c83db66bbab5b6744c82cc237a19360afd7fde67bb",
+      "role": "original"
+    },
+    "hktex/knn_heat/knn_heat/_ops/gather.py": {
+      "upstream_sha256": "d2608096ee6830a0b7c551804f6cd9c56dc542224e4257a5037632cd2d65a786",
+      "local_sha256": "d2608096ee6830a0b7c551804f6cd9c56dc542224e4257a5037632cd2d65a786",
+      "role": "original"
+    },
+    "hktex/knn_heat/knn_heat/_ops/grid_select.py": {
+      "upstream_sha256": "a082a57b9f38005b453599cac7904d165beb07b4a15b77b9c9ca6da594c39419",
+      "local_sha256": "a082a57b9f38005b453599cac7904d165beb07b4a15b77b9c9ca6da594c39419",
+      "role": "original"
+    },
+    "hktex/knn_heat/knn_heat/_ops/heat.py": {
+      "upstream_sha256": "38a8d420491e5666de76146f818db859222d7a2f6bba61aa5285b2010109d196",
+      "local_sha256": "38a8d420491e5666de76146f818db859222d7a2f6bba61aa5285b2010109d196",
+      "role": "original"
+    },
+    "hktex/knn_heat/knn_heat/_ops/weights.py": {
+      "upstream_sha256": "37d8a1773d2a04731e68a4b161b812ef95721a738154be3e8a924c55769b199b",
+      "local_sha256": "37d8a1773d2a04731e68a4b161b812ef95721a738154be3e8a924c55769b199b",
+      "role": "original"
+    },
+    "hktex/knn_heat/knn_heat/config.py": {
+      "upstream_sha256": "e6695c5a18bac096e40996fdbd909866b78999a52d9b946a2ebea35eb31cc128",
+      "local_sha256": "e6695c5a18bac096e40996fdbd909866b78999a52d9b946a2ebea35eb31cc128",
+      "role": "original"
+    },
+    "hktex/knn_heat/knn_heat/faiss_knn.py": {
+      "upstream_sha256": "34189b641effa18ae8548ded15a0b274c10102d8fda4cfbb32e72ded963b2070",
+      "local_sha256": "34189b641effa18ae8548ded15a0b274c10102d8fda4cfbb32e72ded963b2070",
+      "role": "original"
+    },
+    "hktex/knn_heat/knn_heat/knn_gather.py": {
+      "upstream_sha256": "4ed0211408f6480a211c4846ce742ddcd0615e77b7a3d2ac45d28d2f920245b7",
+      "local_sha256": "4ed0211408f6480a211c4846ce742ddcd0615e77b7a3d2ac45d28d2f920245b7",
+      "role": "original"
+    },
+    "hktex/knn_heat/knn_heat/knn_heat.py": {
+      "upstream_sha256": "260ede151ef387ab8a891f68a7de17994265ba841581c880ad8e6bb7eb0eb430",
+      "local_sha256": "260ede151ef387ab8a891f68a7de17994265ba841581c880ad8e6bb7eb0eb430",
+      "role": "original"
+    },
+    "hktex/knn_heat/knn_heat/post_weights.py": {
+      "upstream_sha256": "9f256f63a42cff69e3fe45531a5695b8d37e9a0ad999c5c47730a85f9e153f3b",
+      "local_sha256": "9f256f63a42cff69e3fe45531a5695b8d37e9a0ad999c5c47730a85f9e153f3b",
+      "role": "original"
+    },
+    "hktex/modules/__init__.py": {
+      "upstream_sha256": "82b7e523ed7ead1153726488126275186923482a1f06ad36fe249db3ba2a229b",
+      "local_sha256": "82b7e523ed7ead1153726488126275186923482a1f06ad36fe249db3ba2a229b",
+      "role": "original"
+    },
+    "hktex/modules/base.py": {
+      "upstream_sha256": "8b47c85b7e82be4d9c1fef2716569997f066747de38dd2b3a37588e8cadf6970",
+      "local_sha256": "8b47c85b7e82be4d9c1fef2716569997f066747de38dd2b3a37588e8cadf6970",
+      "role": "original"
+    },
+    "hktex/modules/eigen_albo.py": {
+      "upstream_sha256": "2a55b4d6d18c6d4b740f081e8f29c0e20c6242755158e54ef62a76c1e3a6493d",
+      "local_sha256": "2a55b4d6d18c6d4b740f081e8f29c0e20c6242755158e54ef62a76c1e3a6493d",
+      "role": "original"
+    },
+    "hktex/modules/eigen_albo_knn.py": {
+      "upstream_sha256": "7ef44c2b01ffee7c30f22dfeb1bd114071235ca36849c9cf36fad223e47058a5",
+      "local_sha256": "7ef44c2b01ffee7c30f22dfeb1bd114071235ca36849c9cf36fad223e47058a5",
+      "role": "original"
+    },
+    "hktex/modules/geodesic_opt.py": {
+      "upstream_sha256": "3343b3488238756ad1e087950ff3531fd9f5bf03371f9821269a5430348a7f30",
+      "local_sha256": "3343b3488238756ad1e087950ff3531fd9f5bf03371f9821269a5430348a7f30",
+      "role": "original"
+    },
+    "hktex/modules/heat_kernel_density_knn.py": {
+      "upstream_sha256": "ca20e321618c32c3e36183114f200acd803afd775900e08f6fbf2771f21ccd1c",
+      "local_sha256": "ca20e321618c32c3e36183114f200acd803afd775900e08f6fbf2771f21ccd1c",
+      "role": "original"
+    },
+    "hktex/modules/heat_kernel_model.py": {
+      "upstream_sha256": "403ee784fd5caa52c99b2439faa2f6f9573c56365cc2f42a293758494f900c4f",
+      "local_sha256": "403ee784fd5caa52c99b2439faa2f6f9573c56365cc2f42a293758494f900c4f",
+      "role": "original"
+    },
+    "hktex/modules/heat_kernel_model_knn.py": {
+      "upstream_sha256": "04d998f0662fc23d6adecd7dafe984a46682f8dce34fbf0de953dba9628087a5",
+      "local_sha256": "04d998f0662fc23d6adecd7dafe984a46682f8dce34fbf0de953dba9628087a5",
+      "role": "original"
+    },
+    "hktex/modules/heat_kernel_texture.py": {
+      "upstream_sha256": "df509d6a31bdfcb73554c5bd7cb9a782ae0042bb953fc30b2ac2a603b6351366",
+      "local_sha256": "df509d6a31bdfcb73554c5bd7cb9a782ae0042bb953fc30b2ac2a603b6351366",
+      "role": "original"
+    },
+    "hktex/modules/heat_kernel_texture_knn.py": {
+      "upstream_sha256": "209e9ca95547622f33ef527a302eea85c8aa512645e86c164b8bcf04e7b34783",
+      "local_sha256": "209e9ca95547622f33ef527a302eea85c8aa512645e86c164b8bcf04e7b34783",
+      "role": "original"
+    },
+    "hktex/modules/mesh.py": {
+      "upstream_sha256": "8b285c59342b71a816e802a5a389902a5aa80dbb6ffd9134ae86a49193af0145",
+      "local_sha256": "8b285c59342b71a816e802a5a389902a5aa80dbb6ffd9134ae86a49193af0145",
+      "role": "original"
+    },
+    "hktex/modules/mlp_net.py": {
+      "upstream_sha256": "c5d9d7b408016a9d1b371658f833a36df1da428ef39b2733813abe6322a5a870",
+      "local_sha256": "c5d9d7b408016a9d1b371658f833a36df1da428ef39b2733813abe6322a5a870",
+      "role": "original"
+    },
+    "hktex/modules/pcl_model.py": {
+      "upstream_sha256": "e56a62d6202fd994ada151187b6a7b0ff9bced970a833fc8fc83cb8fe7f9c068",
+      "local_sha256": "e56a62d6202fd994ada151187b6a7b0ff9bced970a833fc8fc83cb8fe7f9c068",
+      "role": "original"
+    },
+    "hktex/modules/pcl_texture.py": {
+      "upstream_sha256": "7c0fd89e31427d72452b12abb0cd40ee3657d7745a9f879f5e716940ab46b27c",
+      "local_sha256": "7c0fd89e31427d72452b12abb0cd40ee3657d7745a9f879f5e716940ab46b27c",
+      "role": "original"
+    },
+    "hktex/modules/tracer.py": {
+      "upstream_sha256": "a0f4ba42737501ae21aba66df352bc8b179dd2e531fad148785bf3cae01e1950",
+      "local_sha256": "908f578be5fbbc79dd3e0d0671d6dfb9f6e6a8806e2f3d2ff26c63e1de42497f",
+      "role": "preexisting_local_change"
+    },
+    "hktex/modules/utils.py": {
+      "upstream_sha256": "15b1e668da9bb97f9346790e72dee9ad2ebdff4df59bd17bebd50720da6e0ea4",
+      "local_sha256": "15b1e668da9bb97f9346790e72dee9ad2ebdff4df59bd17bebd50720da6e0ea4",
+      "role": "original"
+    },
+    "hktex/rendering/__init__.py": {
+      "upstream_sha256": "dae19e5cac79970d8fa8a7e0cd335b54c6cc4756d2aa35945edaf4ee5a9d1c99",
+      "local_sha256": "dae19e5cac79970d8fa8a7e0cd335b54c6cc4756d2aa35945edaf4ee5a9d1c99",
+      "role": "original"
+    },
+    "hktex/rendering/base.py": {
+      "upstream_sha256": "a4b400a5e5f2f36e58a80123cac2b2ad7926799b628318d43e989440ff417638",
+      "local_sha256": "a4b400a5e5f2f36e58a80123cac2b2ad7926799b628318d43e989440ff417638",
+      "role": "original"
+    },
+    "hktex/rendering/diffhk_renderer.py": {
+      "upstream_sha256": "0ee0442ead6199857cbe76889a9e6d90d059cbed14cd3df5e2c98bc1b00fc0f9",
+      "local_sha256": "0ee0442ead6199857cbe76889a9e6d90d059cbed14cd3df5e2c98bc1b00fc0f9",
+      "role": "original"
+    },
+    "hktex/rendering/heat_kernels_density_renderer_knn.py": {
+      "upstream_sha256": "afc831c0e04c08f6bfe17399e267b09ed7d2f9cc632660b4ec9a4cacb8883108",
+      "local_sha256": "afc831c0e04c08f6bfe17399e267b09ed7d2f9cc632660b4ec9a4cacb8883108",
+      "role": "original"
+    },
+    "hktex/rendering/heat_kernels_renderer.py": {
+      "upstream_sha256": "40f2f8da188c9c8e7f6c8331560cb6e4241302195bbda7c6aa35cf83d6e818d0",
+      "local_sha256": "40f2f8da188c9c8e7f6c8331560cb6e4241302195bbda7c6aa35cf83d6e818d0",
+      "role": "original"
+    },
+    "hktex/rendering/heat_kernels_renderer_knn.py": {
+      "upstream_sha256": "fb3313a61b260cdbe862985b97afd2e263a87b1c443daf4e7133cfb66c4a03ec",
+      "local_sha256": "fb3313a61b260cdbe862985b97afd2e263a87b1c443daf4e7133cfb66c4a03ec",
+      "role": "original"
+    },
+    "hktex/rendering/ray_integrator.py": {
+      "upstream_sha256": "d374466a71748b119330163462ec9910977601ddeee90c43057ce1779f420ec9",
+      "local_sha256": "d374466a71748b119330163462ec9910977601ddeee90c43057ce1779f420ec9",
+      "role": "original"
+    },
+    "hktex/rendering/ray_renderer.py": {
+      "upstream_sha256": "87523cdce74fefeb5652fabc31a6a47f99bdfe2ac3cd332979f1374dbbddef32",
+      "local_sha256": "87523cdce74fefeb5652fabc31a6a47f99bdfe2ac3cd332979f1374dbbddef32",
+      "role": "original"
+    },
+    "hktex/rendering/torch_envmap.py": {
+      "upstream_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "local_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "original"
+    },
+    "hktex/rendering/torch_texture_renderer.py": {
+      "upstream_sha256": "04f5f99e5943c6526024debb44e24e195bb52b96273f4a7e8b38ad963006b364",
+      "local_sha256": "04f5f99e5943c6526024debb44e24e195bb52b96273f4a7e8b38ad963006b364",
+      "role": "original"
+    },
+    "hktex/rendering/util.py": {
+      "upstream_sha256": "8bd43768ee3fa1525c1fa2f914edc3eed3d3fe86471bc4b01e8863cb0f308492",
+      "local_sha256": "8bd43768ee3fa1525c1fa2f914edc3eed3d3fe86471bc4b01e8863cb0f308492",
+      "role": "original"
+    },
+    "hktex/rendering/uv_texture_renderer.py": {
+      "upstream_sha256": "6df9a51dd39495abb5bf5a95aade6db0d4a83836cc82977d27650b96806bd6bc",
+      "local_sha256": "6df9a51dd39495abb5bf5a95aade6db0d4a83836cc82977d27650b96806bd6bc",
+      "role": "original"
+    },
+    "hktex/rendering/vertex_colours_renderer.py": {
+      "upstream_sha256": "e65273bca9417fb888fc452e57fce736cead4f09212554f5b367126abae5f37c",
+      "local_sha256": "e65273bca9417fb888fc452e57fce736cead4f09212554f5b367126abae5f37c",
+      "role": "original"
+    },
+    "hktex/trainers/__init__.py": {
+      "upstream_sha256": "2a1bb3be3bf0101b0705b15c1107f8cf9b7369c5cc3e61cfe4f3fab7425cba9b",
+      "local_sha256": "2a1bb3be3bf0101b0705b15c1107f8cf9b7369c5cc3e61cfe4f3fab7425cba9b",
+      "role": "original"
+    },
+    "hktex/trainers/base.py": {
+      "upstream_sha256": "56e1bcd2d73d2c0632e6d229f055edd483a6c566a05d3c24e808dcc8ceb85fcc",
+      "local_sha256": "56e1bcd2d73d2c0632e6d229f055edd483a6c566a05d3c24e808dcc8ceb85fcc",
+      "role": "original"
+    },
+    "hktex/trainers/mitsuba_ray_trainer.py": {
+      "upstream_sha256": "dc57717e1382bc107af9968a0c5b0ee7d9cd65caa244b0efb26a8a23b1e664c7",
+      "local_sha256": "dc57717e1382bc107af9968a0c5b0ee7d9cd65caa244b0efb26a8a23b1e664c7",
+      "role": "original"
+    },
+    "hktex/trainers/mitsuba_trainer.py": {
+      "upstream_sha256": "b16eeb4e5e7da3e240e8cf7c1441d55c91c2b26eb3839862c6529bc295e550ad",
+      "local_sha256": "b16eeb4e5e7da3e240e8cf7c1441d55c91c2b26eb3839862c6529bc295e550ad",
+      "role": "original"
+    },
+    "hktex/trainers/stat_heat_kernels.py": {
+      "upstream_sha256": "71f8759f7abd3343c6d6ef2fd3cfd33a4f5a33c91603b9fb237f01d4ae90b021",
+      "local_sha256": "71f8759f7abd3343c6d6ef2fd3cfd33a4f5a33c91603b9fb237f01d4ae90b021",
+      "role": "original"
+    },
+    "hktex/trainers/utils.py": {
+      "upstream_sha256": "892ba45e7a430f47ce95f7a2f6dd5e48bd56452ad19247a9bf9af61ac8d6f4a6",
+      "local_sha256": "892ba45e7a430f47ce95f7a2f6dd5e48bd56452ad19247a9bf9af61ac8d6f4a6",
+      "role": "original"
+    },
+    "hktex/trainers/uv_texture.py": {
+      "upstream_sha256": "88824b17e6a79396dd604d50283a4e143e9dc15241b2ae5af1de7d1dcf2f0199",
+      "local_sha256": "88824b17e6a79396dd604d50283a4e143e9dc15241b2ae5af1de7d1dcf2f0199",
+      "role": "original"
+    },
+    "hktex/trainers/uv_texture_pcl.py": {
+      "upstream_sha256": "3e9456525b8bf66a8520c9b06c72fce6ff3a19a428b5c83b5f914badd36cce6a",
+      "local_sha256": "3e9456525b8bf66a8520c9b06c72fce6ff3a19a428b5c83b5f914badd36cce6a",
+      "role": "original"
+    },
+    "hktex/trainers/vertex_colours.py": {
+      "upstream_sha256": "33e0ae2aac485ebd1f9b8280844ab1e9b65be595ae26f62054e5e5ef55ca9f79",
+      "local_sha256": "33e0ae2aac485ebd1f9b8280844ab1e9b65be595ae26f62054e5e5ef55ca9f79",
+      "role": "original"
+    },
+    "hktex/trainers/vertex_ray_trainer.py": {
+      "upstream_sha256": "53af21fc962429457274be74fee89cfbf13f2f2df4e596d6eb8afb43d71f3ed5",
+      "local_sha256": "53af21fc962429457274be74fee89cfbf13f2f2df4e596d6eb8afb43d71f3ed5",
+      "role": "original"
+    },
+    "hktex/triton/__init__.py": {
+      "upstream_sha256": "15efccacf9051b19985120030bf86e51be2b8976cf9b79f9164320ca72c74e14",
+      "local_sha256": "15efccacf9051b19985120030bf86e51be2b8976cf9b79f9164320ca72c74e14",
+      "role": "original"
+    },
+    "hktex/triton/distances.py": {
+      "upstream_sha256": "07c8a6f1de5b2a05fbf63eff0209d722d6c60c24026d11b34c32e203ff0dd996",
+      "local_sha256": "07c8a6f1de5b2a05fbf63eff0209d722d6c60c24026d11b34c32e203ff0dd996",
+      "role": "original"
+    },
+    "hktex/utils/__init__.py": {
+      "upstream_sha256": "2c11bf452231769ca3a2074698e2ac5c2d39833ad2f2c5cd259dde0654bb3d88",
+      "local_sha256": "2c11bf452231769ca3a2074698e2ac5c2d39833ad2f2c5cd259dde0654bb3d88",
+      "role": "original"
+    },
+    "hktex/utils/base.py": {
+      "upstream_sha256": "6f91723a844ec4643ca31aefa2569022c2510bca866f36a99dc18ef50ec6dd7f",
+      "local_sha256": "6f91723a844ec4643ca31aefa2569022c2510bca866f36a99dc18ef50ec6dd7f",
+      "role": "original"
+    },
+    "hktex/utils/callback.py": {
+      "upstream_sha256": "da500e2e7aeeee76c93c1a434697ec02c9fe834d50d6090b40f4876349dffac4",
+      "local_sha256": "da500e2e7aeeee76c93c1a434697ec02c9fe834d50d6090b40f4876349dffac4",
+      "role": "original"
+    },
+    "hktex/utils/cart_bary.py": {
+      "upstream_sha256": "2e300454c4b880e046928f2ba69710e7e35424c2881e1eb3f5c04b303dc8b69b",
+      "local_sha256": "2e300454c4b880e046928f2ba69710e7e35424c2881e1eb3f5c04b303dc8b69b",
+      "role": "original"
+    },
+    "hktex/utils/color.py": {
+      "upstream_sha256": "538a86f0d3e075fe21aaba2acc1e965b7bcdfa0fff4a31507a02dd8ea6b0c767",
+      "local_sha256": "538a86f0d3e075fe21aaba2acc1e965b7bcdfa0fff4a31507a02dd8ea6b0c767",
+      "role": "original"
+    },
+    "hktex/utils/config.py": {
+      "upstream_sha256": "940aa02c19c4741c9fa36c691d164a9fe1d99742e9ce544d1070b0f26828d6d1",
+      "local_sha256": "940aa02c19c4741c9fa36c691d164a9fe1d99742e9ce544d1070b0f26828d6d1",
+      "role": "original"
+    },
+    "hktex/utils/diffusion.py": {
+      "upstream_sha256": "cb015f464ebcf63286973c5af1406787c133d6183c1922259e20ab8d81db298c",
+      "local_sha256": "cb015f464ebcf63286973c5af1406787c133d6183c1922259e20ab8d81db298c",
+      "role": "original"
+    },
+    "hktex/utils/distances.py": {
+      "upstream_sha256": "97f025eda045db3b08d7328cf5e2b3a090358336c759f1b4f0752f5ada3079a2",
+      "local_sha256": "97f025eda045db3b08d7328cf5e2b3a090358336c759f1b4f0752f5ada3079a2",
+      "role": "original"
+    },
+    "hktex/utils/geodesics.py": {
+      "upstream_sha256": "ff655cba8ee64e219de300d4f691ba8881a2fe1a3b36ebec26af79a95438d5a9",
+      "local_sha256": "ff655cba8ee64e219de300d4f691ba8881a2fe1a3b36ebec26af79a95438d5a9",
+      "role": "original"
+    },
+    "hktex/utils/image.py": {
+      "upstream_sha256": "760cd77f8e5d0eb958cb2aff671dcb191a38375a10930ebad00e9337cc28d7c3",
+      "local_sha256": "760cd77f8e5d0eb958cb2aff671dcb191a38375a10930ebad00e9337cc28d7c3",
+      "role": "original"
+    },
+    "hktex/utils/lbo.py": {
+      "upstream_sha256": "62a5bde329299e66c5cb2fdb34e29d35674cf9432c81ace4616b036e109121bf",
+      "local_sha256": "f93df1a42a324e47f33b2bf67e4251401ce642c5b859101436dc47316eb0d6bb",
+      "role": "preexisting_local_change"
+    },
+    "hktex/utils/local_reference_frames.py": {
+      "upstream_sha256": "00c62202373b227a557138bd3de9a82aba8484975ba6884c49249f2839397ed1",
+      "local_sha256": "00c62202373b227a557138bd3de9a82aba8484975ba6884c49249f2839397ed1",
+      "role": "original"
+    },
+    "hktex/utils/mesh.py": {
+      "upstream_sha256": "d70489a6b8ba647df723cfbca9ba7fe7ab7b28cc8b932633ff8d2c369c49ca59",
+      "local_sha256": "d70489a6b8ba647df723cfbca9ba7fe7ab7b28cc8b932633ff8d2c369c49ca59",
+      "role": "original"
+    },
+    "hktex/utils/metrics.py": {
+      "upstream_sha256": "016c0e4e9bc9de67a5d4f925e947f1d146adf8775fbb0a2721c2c38504efa919",
+      "local_sha256": "016c0e4e9bc9de67a5d4f925e947f1d146adf8775fbb0a2721c2c38504efa919",
+      "role": "original"
+    },
+    "hktex/utils/misc.py": {
+      "upstream_sha256": "71a6a00aac83a89d97df61aba180afb6490be33a1acbd890c77665f4b18c1218",
+      "local_sha256": "71a6a00aac83a89d97df61aba180afb6490be33a1acbd890c77665f4b18c1218",
+      "role": "original"
+    },
+    "hktex/utils/mitsuba.py": {
+      "upstream_sha256": "5263cd6063f3dd863510211fbf3e5e94e3cbe2813a4ccf65ed53aa41a6dab4b0",
+      "local_sha256": "5263cd6063f3dd863510211fbf3e5e94e3cbe2813a4ccf65ed53aa41a6dab4b0",
+      "role": "original"
+    },
+    "hktex/utils/pcl_losses.py": {
+      "upstream_sha256": "b15dee1a1cb2f892732cc814189f2449d544ba9e512ea288483996e1a30bee33",
+      "local_sha256": "b15dee1a1cb2f892732cc814189f2449d544ba9e512ea288483996e1a30bee33",
+      "role": "original"
+    },
+    "hktex/utils/repr_patches.py": {
+      "upstream_sha256": "70f9e21f2fce17a62ae6f84bc1c9c2d31995ea0b4a71dbc8ed799e53bce310c7",
+      "local_sha256": "70f9e21f2fce17a62ae6f84bc1c9c2d31995ea0b4a71dbc8ed799e53bce310c7",
+      "role": "original"
+    },
+    "hktex/utils/sampling.py": {
+      "upstream_sha256": "e1858198860495bc3f6adbac4afe46cf361a561e8593d600f23fa05f98cf763c",
+      "local_sha256": "e1858198860495bc3f6adbac4afe46cf361a561e8593d600f23fa05f98cf763c",
+      "role": "original"
+    },
+    "hktex/utils/typing.py": {
+      "upstream_sha256": "3fa4b9db140907632caf34ccec889a5c31da55e46f1a8b423cdf654570fd317c",
+      "local_sha256": "3fa4b9db140907632caf34ccec889a5c31da55e46f1a8b423cdf654570fd317c",
+      "role": "original"
+    },
+    "hktex/utils/video.py": {
+      "upstream_sha256": "ff885057c29c6b35723c574936525a2f511116849829661d15ad3ab6389908b3",
+      "local_sha256": "ff885057c29c6b35723c574936525a2f511116849829661d15ad3ab6389908b3",
+      "role": "original"
+    },
+    "interactive_density_knn.py": {
+      "upstream_sha256": "5590aead76ba87a2a3f4a49a419212264c37b42e3488df406bbf68567e454804",
+      "local_sha256": "5590aead76ba87a2a3f4a49a419212264c37b42e3488df406bbf68567e454804",
+      "role": "original"
+    },
+    "optimisation.py": {
+      "upstream_sha256": "143d62e46b45159e197c28aef7038e3502c18f6eb60c300ec6d20135c31dd405",
+      "local_sha256": "143d62e46b45159e197c28aef7038e3502c18f6eb60c300ec6d20135c31dd405",
+      "role": "original"
+    },
+    "scripts/render_hktex_pbr.py": {
+      "upstream_sha256": "52bbfc9a03bbbe1f30d7ff02eb8c3e0240002ed077d6681c0c7e51d2e099a540",
+      "local_sha256": "52bbfc9a03bbbe1f30d7ff02eb8c3e0240002ed077d6681c0c7e51d2e099a540",
+      "role": "original"
+    }
+  }
+}
