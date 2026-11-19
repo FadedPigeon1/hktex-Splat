@@ -17,14 +17,16 @@ retained workloads, metric definitions and current verification status.
 
 This extends `compare_backends`, `renderer_comparison`, `training_research`, and the
 existing report readers. The renderer, heat-kernel equations, native FAISS
-implementation, support assertions, conservative 5,000/10,000-source fallback,
+implementation, support assertions, bounded tiled selection for large source counts,
 backward kernels, and geodesic optimizer are unchanged.
 
-## One workflow on Grace's A100
+## One workflow on a CUDA GPU
 
-Use the existing user-owned Grace A100 Slurm allocation. Run these commands on
-its allocated compute node, with `SLURM_JOB_ID` inherited. The tools check the
-allocation/GPU and never submit `sbatch`, request `salloc`, or enlarge budgets.
+Run from the repository root in an activated environment with an NVIDIA GPU.
+Slurm is optional; use your scheduler on clusters. A100 is the recorded validation
+hardware. Run the correctness gate before measuring another GPU, and compare
+runs on the same recorded physical device. Tools never allocate resources or
+increase budgets automatically.
 
 ```bash
 cd /path/to/your/hktex/checkout
@@ -37,7 +39,7 @@ unset TRITON_INTERPRET
 # Dry preview: standard library only, no Torch import, output files, or GPU work.
 "$HK_PY" -B -m splatting_script.benchmarks.compare_training workflow
 
-# Embedded real-scene RGB/gradient/optimizer gate, in the existing allocation.
+# Embedded real-scene RGB/gradient/optimizer gate, on the available CUDA GPU.
 "$HK_PY" -B -m splatting_script.experiments.compare_backends \
   --backend hybrid --execute --validate-only --support-selector fused
 
@@ -238,7 +240,7 @@ counts, observer differences and baseline-repeat differences before raising;
 the gate never accepts baseline noise as permission for a larger error.
 See [the smoke-run failure investigation](PROFILE_VALIDATION_FIX.md).
 The separate `compare_backends --validate-only` gate checks renderer comparisons
-and optimizer updates. Both execute only with `--execute` in an allocation;
+and optimizer updates. Both execute only with `--execute` on a CUDA GPU;
 neither supplies uninstrumented speed evidence.
 
 Standalone CPU/synthetic GPU suites were retired after a fresh CPU run. Their

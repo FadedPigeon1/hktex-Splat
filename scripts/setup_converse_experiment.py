@@ -20,7 +20,6 @@ PLACEHOLDERS = (
 DOCUMENTS = (
     "data/converse/README.md",
     "experiments/converse_fidelity/cameras.json",
-    "experiments/converse_fidelity/rois.json",
     "splatting_script/configs/converse_training.yaml",
 )
 

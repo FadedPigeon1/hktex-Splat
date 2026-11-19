@@ -467,6 +467,9 @@ def _execute(args, process_start, jit, instrumentation=None):
     install_import_paths()
     import numpy as np
     import torch
+    if not torch.cuda.is_available():
+        raise RuntimeError('Execution requires CUDA-enabled PyTorch and a usable NVIDIA GPU; '
+                           'CPU command previews remain available without --execute')
     if args.research or args.matmul_precision is not None:
         torch.set_float32_matmul_precision(args.matmul_precision or 'highest')
     from interactive_density_knn import load_datamodule_and_trainer_only

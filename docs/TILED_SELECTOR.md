@@ -103,7 +103,7 @@ The local artifact is under
 No completed 256×256 full-run result or performance improvement is claimed.
 
 Before a full training comparison, run the independent GPU gate on a small image
-inside an existing A100 allocation:
+on a supported NVIDIA CUDA GPU (A100 is the recorded validation device):
 
 ```bash
 "$HK_PY" -B -m splatting_script.experiments.compare_backends \

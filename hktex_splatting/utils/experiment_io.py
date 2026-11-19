@@ -1,6 +1,6 @@
 """Manage portable experiment inputs, preservation checks and unique outputs.
 
-Shared training/benchmark I/O and existing GPU allocation guards.
+Shared training/benchmark I/O and scheduler-independent NVIDIA GPU checks.
 Main API: configure_cache, gpu_guard, unique_output, write_json."""
 from __future__ import annotations
 
@@ -8,11 +8,11 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
-import socket
 import subprocess
 import sys
 import tempfile
 import uuid
+import warnings
 
 HERE = Path(__file__).resolve().parents[2] / "experiments/converse_heat_kernel_splatting"
 ROOT = HERE.parents[1]
@@ -77,10 +77,23 @@ def configure_cache(run_name, root=Path("/tmp/hktex_heat_kernel_splatting")):
 
 
 def gpu_guard():
-    if not os.environ.get("SLURM_JOB_ID") or socket.gethostname().lower().startswith("login"):
-        raise RuntimeError("Manual execution requires an existing interactive A100 Slurm allocation")
-    result = subprocess.run(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
-                            check=True, capture_output=True, text=True)
-    if not result.stdout.strip() or any("A100" not in s for s in result.stdout.splitlines()):
-        raise RuntimeError("This validation protocol requires an A100; no GPU is requested automatically")
+    """Require an NVIDIA device without imposing a cluster or scheduler.
+
+    Keep Torch imports after configure_cache in callers. Actual CUDA runtime
+    initialization and the recorded device UUID remain the caller's responsibility.
+    """
+    if os.environ.get("CUDA_VISIBLE_DEVICES") in ("", "-1"):
+        raise RuntimeError("CUDA_VISIBLE_DEVICES disables GPU execution")
+    try:
+        result = subprocess.run(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
+                                check=True, capture_output=True, text=True)
+    except (OSError, subprocess.CalledProcessError) as error:
+        raise RuntimeError("GPU execution requires an NVIDIA GPU and working nvidia-smi. "
+                           "On a cluster, obtain GPU resources through your scheduler first.") from error
+    if not result.stdout.strip():
+        raise RuntimeError("No NVIDIA GPU was reported; CPU command previews remain available")
+    if any("A100" not in s for s in result.stdout.splitlines()):
+        warnings.warn("The recorded validation used an A100. Run the correctness gate on your "
+                      "CUDA device before benchmarking; other GPU models are not yet validated.",
+                      RuntimeWarning, stacklevel=2)
     return result.stdout.strip()
