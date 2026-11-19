@@ -65,22 +65,44 @@ for equations, function names and the full dependency map.
 
 ### 1. Install the environment
 
-Follow the [original HKTex installation](../README.md#installation), using its
-Python 3.11 environment and CUDA-compatible PyTorch, GPU FAISS, Mitsuba/Dr.Jit,
-geodesic and mesh/spectral dependencies. HKS also needs Triton and Numba; the
-optional neural-texture environment is not required for the HKS comparison.
+Use Linux, Python 3.11 and an NVIDIA GPU supported by CUDA PyTorch/Triton.
+A100 is the recorded validation device; other CUDA GPUs must pass the correctness
+gate before use. CPU-only machines can inspect command previews and asset checks.
 
-From the repository root, with that environment active:
+The following Conda/Mamba example installs GPU FAISS and the recorded CUDA 12.9
+PyTorch build. Use an NVIDIA driver compatible with those wheels. If you already
+have a compatible original-HKTex environment, reuse it and install the project
+extra instead of creating another environment. Run project commands from the
+repository root.
 
 ```bash
-python -m pip install numba==0.61.2
-python -m pip install -e . --no-deps
+mamba create -n hktex-hks python=3.11
+mamba activate hktex-hks
+mamba install -c pytorch -c nvidia -c rapidsai -c conda-forge \
+  libnvjitlink=12.9.86 faiss-gpu-cuvs=1.13.1 "numpy<2.3"
+
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install torch==2.10.0 torchvision==0.25.0 \
+  --index-url https://download.pytorch.org/whl/cu129
+python -m pip install -e ".[native]" --no-build-isolation
+python -m pip check
+python -c "import faiss; assert hasattr(faiss, 'StandardGpuResources')"
 HK_PY=${HK_PY:-python}
 ```
 
-Use the Triton version supplied with the installed CUDA PyTorch build. The editable
-installation registers the HKS commands; it does not install the native dependency
-stack or download research assets. Run all commands below from the repository root.
+`pyproject.toml` declares HKS runtime dependencies, including Numba. The `native`
+extra installs the original-HKTex Python dependencies required by the shared
+loader; optional tiny-cuda-nn texture baselines are not required. Triton must
+match PyTorch, so do not substitute an unrelated Triton version. Native extensions
+may need their upstream compiler/CUDA toolkit prerequisites.
+
+**GPU FAISS is a separate native prerequisite**, not a dependency pip can safely
+replace with `faiss-cpu`. Mamba is one way to install it, not a runtime requirement.
+For another environment manager or CUDA driver/toolkit, install compatible CUDA
+PyTorch wheels and GPU FAISS using upstream instructions, then run the correctness
+gate. The example versions preserve the tested Torch selector policy. Installation
+does not download mesh/spectral assets. Use an editable source checkout; experiment
+commands depend on repository configurations and provenance.
 
 ### 2. Prepare the inputs
 
@@ -94,17 +116,40 @@ The current comparison harness is configured for the Converse experiment:
 | Training configuration | [converse_training.yaml](../splatting_script/configs/converse_training.yaml) |
 
 Follow the [asset guide](../data/converse/README.md) for mesh and texture layout.
-The harness requires the matching spectral precomputation; it deliberately stops
-if it is absent. Original HKTex's spectral preprocessing supplies this archive.
+Use the source link, attribution and checksum in the asset guide. Prepare the
+exact downloaded GLB, explicitly generate the original spectral archive once,
+and check inputs before training:
+
+```bash
+"$HK_PY" -B -m hktex_splatting.prepare_assets --mesh /path/to/converse__free.glb --execute
+"$HK_PY" -B -m hktex_splatting.prepare_assets --precompute --execute
+"$HK_PY" -B -m hktex_splatting.prepare_assets --check
+```
+
+Precomputation can be expensive. It runs only with both `--precompute` and
+`--execute`, uses the unchanged original HKTex eigensystem code and performs no
+training. Existing meshes/archives are preserved. Preview preparation by omitting
+`--execute`. The renderer itself requires the archive and never regenerates it.
 
 The recorded [camera JSON](../experiments/converse_fidelity/cameras.json) contains
 the `top`, `side`, `three_quarter` and `logo_closeup` views. The two held-out views
 are derived by the camera helper. Keep these definitions unchanged when reproducing
 the recorded comparison. CLI previews work without loading these assets.
 
-The current harness requires an **already allocated A100 Slurm session** for
-execution. It checks the allocation and GPU and never requests one automatically.
-CPU command previews below do not need an allocation.
+Execution requires a usable NVIDIA GPU and `nvidia-smi`; **Slurm is not required**.
+On a workstation, run directly in your activated environment. On a cluster, use
+its GPU allocation procedure. Tools never allocate resources automatically.
+The harness warns on GPU models other than the validated A100 and records actual
+hardware for comparisons. CPU previews require no GPU.
+
+### Setup verification and limits
+
+Dependency declarations were checked against the existing research environment;
+an offline wheel build, CPU command previews, input checks and file-preservation
+checks passed. Preprocessing wrapper checks used a stub writer, not a numerical
+eigensystem computation. A fresh environment installation, regenerated spectral
+archive and non-A100 GPU execution have not been validated. Run the GPU gate
+below before starting a full comparison in a new environment.
 
 ## Run HKS
 
@@ -116,7 +161,7 @@ starting GPU work:
   --kernels 1000 --resolution 128 --iterations 40 --support-selector fused
 ```
 
-With the inputs ready and inside an existing A100 allocation, add `--execute` to
+With the inputs ready and a CUDA GPU available, add `--execute` to
 render and perform the configured training updates:
 
 ```bash
@@ -190,7 +235,7 @@ Preview the complete plan first:
   --kernel-counts 5000 --resolutions 256 --iterations 1000 --seed 0
 ```
 
-Execute the same plan inside an existing A100 allocation:
+Execute the same plan on your CUDA GPU:
 
 ```bash
 "$HK_PY" -B -m splatting_script.benchmarks.compare_training workflow \
@@ -288,6 +333,8 @@ modules. They remain parts of the same HKS pipeline.
 | [knn_heat/triangle_kernel_support.py](knn_heat/triangle_kernel_support.py), [packed_support.py](knn_heat/packed_support.py) | Triangle candidates, ordered support, fused selection and safe fallback. |
 | [modules/spectral_heat_coefficients.py](modules/spectral_heat_coefficients.py), [Triton coefficients](triton/spectral_heat_coefficients.py) | GPU spectral coefficients and their backward operator. |
 | [triton/heat_kernel_splatting.py](triton/heat_kernel_splatting.py) | Group tile work, interpolate heat and emit weighted pixel contributions. |
+| [rendering/fast_raster.py](rendering/fast_raster.py), [mesh_visibility_raster.py](rendering/mesh_visibility_raster.py) | Numba CPU visibility: winning triangle IDs and barycentric coordinates. |
+| [rendering/camera_raster.py](rendering/camera_raster.py) | Shared camera basis, clipping and retained reference rasterization utilities. |
 | [rendering/triangle_tile_layout.py](rendering/triangle_tile_layout.py) | Fixed visible triangle/tile patches and bounded record layout used during geometry preparation. |
 | [triton/splat_contributions.py](triton/splat_contributions.py) | Shared top-30 selection; generic emission and reconstruction for correctness comparisons. |
 | [triton/splat_reconstruction.py](triton/splat_reconstruction.py) | Main HKS weighted RGB reconstruction and selected contribution backward kernels with runtime pair bounds. |

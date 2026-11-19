@@ -172,12 +172,12 @@ def srgb_to_linear(rgb):
 
 
 def require_gpu_allocation():
-    import socket
-    if not os.environ.get("SLURM_JOB_ID") or socket.gethostname().lower().startswith("login"):
-        raise RuntimeError("Run on a Grace GPU node inside your existing Slurm allocation; no allocation is launched here")
+    """Compatibility entry for scheduler-independent GPU validation."""
+    from hktex_splatting.utils.experiment_io import gpu_guard
+    gpu_guard()
     import torch
     if not torch.cuda.is_available():
-        raise RuntimeError("Allocated environment has no available CUDA GPU")
+        raise RuntimeError("CUDA-enabled PyTorch and a usable NVIDIA GPU are required")
 
 
 def runtime_cache_environment(output):

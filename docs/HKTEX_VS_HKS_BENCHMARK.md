@@ -142,8 +142,9 @@ budgets remain enforced. See [selector scope and validation](TILED_SELECTOR.md).
 
 Run from the repository root with the installed environment's Python. Omit
 `--execute` to preview commands without importing Torch or touching the GPU.
-Execution requires an existing user-owned A100 Slurm allocation on its compute
-node; the workflow never requests an allocation. Use a new output directory.
+Execution requires an NVIDIA CUDA GPU; Slurm is optional. On clusters, obtain
+resources through your scheduler. The recorded validation hardware is A100; run
+the correctness gate on other supported devices. Use a new output directory.
 
 ```bash
 HK_PY=${HK_PY:-python}

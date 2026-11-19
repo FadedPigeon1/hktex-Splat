@@ -28,13 +28,15 @@ HK_PY=${HK_PY:-python}
 
 These commands do not import Torch or request/launch GPU work. The standard workflow
 previews ten jobs; scaling previews 111. Both renderer preflights and their paired
-alignment gate must pass before capacity pilots or measurements. Existing allocation and capacity checks
+alignment gate must pass before capacity pilots or measurements. Existing GPU and capacity checks
 control actual feasibility. The main training YAML and default numeric controls remain.
 
-## Execute inside an allocated A100
+## Execute on a CUDA GPU
 
 For the 5,000-source GPU validation and 1,000-update comparison commands,
 follow the [HKS run guide](../hktex_splatting/README.md#validate-and-run-the-5000-kernel-experiment).
+Slurm is optional; use your cluster scheduler when applicable. A100 is the
+validated hardware; run the correctness gate on other supported CUDA GPUs too.
 Run the correctness gate before the full workload. The documented diagnostic
 workflow allows native repeatability variation and keeps HKS validation strict.
 
