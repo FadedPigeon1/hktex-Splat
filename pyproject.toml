@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hktex-splatting-research"
+version = "0.1.0"
+description = "Intrinsic differentiable Heat-Kernel Splatting research components"
+requires-python = ">=3.10"
+
+[project.scripts]
+hktex-splatting-train = "hktex_splatting.cli:main"
+hktex-splatting-compare = "splatting_script.experiments.compare_backends:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["hktex_splatting*", "splatting_script*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+splatting_script = ["configs/*.yaml", "configs/*.json"]

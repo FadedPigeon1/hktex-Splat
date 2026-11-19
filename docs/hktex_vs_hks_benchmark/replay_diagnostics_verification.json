@@ -1,0 +1,19 @@
+{
+  "status": "diagnostics_added_replay_failure_unresolved",
+  "cpu_checks_passed": 7,
+  "gpu_run_executed": false,
+  "tolerances_changed": false,
+  "production_rendering_and_optimization_changed": false,
+  "git_index_preserved": true,
+  "existing_failed_run_preserved": true,
+  "modified_files": [
+    "splatting_script/benchmarks/training_research.py",
+    "docs/PREFLIGHT_LOSS_MODE_FIX.md"
+  ],
+  "new_outputs_for_future_preflights": [
+    "preflight_replay.json",
+    "preflight_replay_tensors.npz (failed replay only)"
+  ],
+  "source_sha256": "027eb21f1a742fbc3dd962a382647eb33872199e11bf7edcd222d653a9813500",
+  "scope": "Per-tensor replay differences, starting model hashes, optimizer state and learning rates; existing pass/fail predicates retained. No root-cause claim."
+}

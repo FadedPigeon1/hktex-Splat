@@ -1,0 +1,3 @@
+default three forwards/backwards/Adam updates complete
+fused three forwards/backwards/Adam updates complete
+{"phase": "before", "arrays": 231, "exact_before_after": false, "actual_hybrid_emitter": true, "coefficient_backend": "triton", "cpu_interpreter": true, "selectors": ["legacy", "fused"], "optimizer_updates": 6, "wide_fallback_source_count": 5000, "wide_fallback_metadata": "legacy_selector_fallback", "native_control": "Original numerical methods with deterministic exhaustive CPU L2 instead of GPU FAISS", "time_parameter": "fixed", "gpu_executed": false}

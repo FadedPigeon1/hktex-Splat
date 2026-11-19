@@ -1,0 +1,314 @@
+[
+  {
+    "path": "hktex_splatting/README.md",
+    "change": "modified",
+    "added": 26,
+    "removed": 46
+  },
+  {
+    "path": "hktex_splatting/cli.py",
+    "change": "modified",
+    "added": 4,
+    "removed": 27
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 551
+  },
+  {
+    "path": "hktex_splatting/trainers/__init__.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 4
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 88
+  },
+  {
+    "path": "hktex_splatting/modules/__init__.py",
+    "change": "modified",
+    "added": 3,
+    "removed": 3
+  },
+  {
+    "path": "hktex_splatting/modules/live_field.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "hktex_splatting/modules/spectral_heat_field.py",
+    "change": "modified",
+    "added": 19,
+    "removed": 73
+  },
+  {
+    "path": "hktex_splatting/modules/coefficients.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "hktex_splatting/utils/paths.py",
+    "change": "modified",
+    "added": 4,
+    "removed": 3
+  },
+  {
+    "path": "hktex_splatting/utils/training_profile.py",
+    "change": "modified",
+    "added": 3,
+    "removed": 44
+  },
+  {
+    "path": "hktex_splatting/utils/compiler_runtime.py",
+    "change": "modified",
+    "added": 4,
+    "removed": 69
+  },
+  {
+    "path": "hktex_splatting/knn_heat/resident_support.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "hktex_splatting/knn_heat/packed_support.py",
+    "change": "modified",
+    "added": 0,
+    "removed": 63
+  },
+  {
+    "path": "hktex_splatting/rendering/splat_autograd.py",
+    "change": "modified",
+    "added": 2,
+    "removed": 92
+  },
+  {
+    "path": "hktex_splatting/rendering/gpu_dispatch.py",
+    "change": "modified",
+    "added": 3,
+    "removed": 122
+  },
+  {
+    "path": "hktex_splatting/rendering/frame.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 35
+  },
+  {
+    "path": "hktex_splatting/rendering/prepared_geometry.py",
+    "change": "modified",
+    "added": 1,
+    "removed": 44
+  },
+  {
+    "path": "hktex_splatting/rendering/kernel_centric.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "hktex_splatting/rendering/dynamic_dispatch.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 37
+  },
+  {
+    "path": "hktex_splatting/rendering/footprint.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 115
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "change": "modified",
+    "added": 60,
+    "removed": 328
+  },
+  {
+    "path": "hktex_splatting/rendering/differentiable.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "hktex_splatting/rendering/direct_tiles.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_renderer.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 123
+  },
+  {
+    "path": "hktex_splatting/rendering/core.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "hktex_splatting/rendering/resident.py",
+    "change": "modified",
+    "added": 6,
+    "removed": 37
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_reference.py",
+    "change": "modified",
+    "added": 3,
+    "removed": 39
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_heat_map.py",
+    "change": "modified",
+    "added": 3,
+    "removed": 55
+  },
+  {
+    "path": "hktex_splatting/rendering/kernel_centric_raster.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "hktex_splatting/rendering/renderer.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "change": "modified",
+    "added": 3,
+    "removed": 65
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "change": "modified",
+    "added": 3,
+    "removed": 164
+  },
+  {
+    "path": "hktex_splatting/triton/backward.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "hktex_splatting/triton/runtime_counts.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "hktex_splatting/triton/direct_tiles.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "hktex_splatting/triton/gpu.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "hktex_splatting/triton/coefficient_gpu.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "splatting_script/README.md",
+    "change": "modified",
+    "added": 50,
+    "removed": 165
+  },
+  {
+    "path": "splatting_script/experiments/__init__.py",
+    "change": "modified",
+    "added": 3,
+    "removed": 3
+  },
+  {
+    "path": "splatting_script/experiments/compare_backends.py",
+    "change": "modified",
+    "added": 4,
+    "removed": 11
+  },
+  {
+    "path": "splatting_script/experiments/train_forward.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 10
+  },
+  {
+    "path": "splatting_script/benchmarks/pipeline_workflow.py",
+    "change": "modified",
+    "added": 2,
+    "removed": 2
+  },
+  {
+    "path": "splatting_script/benchmarks/renderer_comparison.py",
+    "change": "modified",
+    "added": 63,
+    "removed": 88
+  },
+  {
+    "path": "splatting_script/benchmarks/direct_tiles.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 17
+  },
+  {
+    "path": "splatting_script/benchmarks/legacy/__init__.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 4
+  },
+  {
+    "path": "splatting_script/benchmarks/legacy/train_forward.py",
+    "change": "deleted",
+    "added": 0,
+    "removed": 14
+  },
+  {
+    "path": "splatting_script/benchmarks/legacy/README.md",
+    "change": "deleted",
+    "added": 0,
+    "removed": 28
+  },
+  {
+    "path": "docs/HKTEX_RESEARCH_TRAINING.md",
+    "change": "modified",
+    "added": 12,
+    "removed": 6
+  },
+  {
+    "path": "docs/HEAT_KERNEL_SPLATTING_ARCHITECTURE.md",
+    "change": "modified",
+    "added": 119,
+    "removed": 727
+  },
+  {
+    "path": "docs/BENCHMARK_PROFILER.md",
+    "change": "modified",
+    "added": 9,
+    "removed": 2
+  },
+  {
+    "path": "README.md",
+    "change": "modified",
+    "added": 88,
+    "removed": 130
+  }
+]

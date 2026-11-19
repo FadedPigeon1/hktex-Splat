@@ -1,0 +1,18 @@
+Syntax/local imports and protected numerical sources passed; 22 Triton definitions byte-identical.
+Runtime imports passed: 52
+{
+  "deleted_files": 26,
+  "syntax_checked": 53,
+  "runtime_import_paths": 52,
+  "package_count": 11,
+  "byte_identical_triton_definitions": 22,
+  "removed_functions": 58,
+  "original_hktex_scripts_configs_unchanged": true,
+  "prior_cleanup_records_unchanged": true,
+  "source_math_backward_and_selector_preserved": true,
+  "benchmark_training_and_profile_math_preserved": true,
+  "public_hybrid_default_backward_preserved": true,
+  "git_index_unchanged": true,
+  "gpu_allocation": false,
+  "gpu_executed": false
+}

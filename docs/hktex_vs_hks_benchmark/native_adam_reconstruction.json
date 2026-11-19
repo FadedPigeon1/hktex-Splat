@@ -1,0 +1,211 @@
+{
+  "cpu_adam_reconstruction_passed": true,
+  "updates_checked": 12,
+  "updates": [
+    {
+      "pass_name": "first",
+      "parameter": "_mean_colour",
+      "max_cpu_adam_error": 0.0,
+      "matches_saved_update": true
+    },
+    {
+      "pass_name": "first",
+      "parameter": "_kernel_colours",
+      "max_cpu_adam_error": 5.960464477539063e-08,
+      "matches_saved_update": true
+    },
+    {
+      "pass_name": "first",
+      "parameter": "_angles",
+      "max_cpu_adam_error": 2.384185791015625e-07,
+      "matches_saved_update": true
+    },
+    {
+      "pass_name": "first",
+      "parameter": "_anisotropies",
+      "max_cpu_adam_error": 0.0,
+      "matches_saved_update": true
+    },
+    {
+      "pass_name": "first",
+      "parameter": "_thresholds",
+      "max_cpu_adam_error": 5.960464477539063e-08,
+      "matches_saved_update": true
+    },
+    {
+      "pass_name": "first",
+      "parameter": "_sharpnesses",
+      "max_cpu_adam_error": 0.0,
+      "matches_saved_update": true
+    },
+    {
+      "pass_name": "replay",
+      "parameter": "_mean_colour",
+      "max_cpu_adam_error": 0.0,
+      "matches_saved_update": true
+    },
+    {
+      "pass_name": "replay",
+      "parameter": "_kernel_colours",
+      "max_cpu_adam_error": 5.960464477539063e-08,
+      "matches_saved_update": true
+    },
+    {
+      "pass_name": "replay",
+      "parameter": "_angles",
+      "max_cpu_adam_error": 2.384185791015625e-07,
+      "matches_saved_update": true
+    },
+    {
+      "pass_name": "replay",
+      "parameter": "_anisotropies",
+      "max_cpu_adam_error": 0.0,
+      "matches_saved_update": true
+    },
+    {
+      "pass_name": "replay",
+      "parameter": "_thresholds",
+      "max_cpu_adam_error": 5.960464477539063e-08,
+      "matches_saved_update": true
+    },
+    {
+      "pass_name": "replay",
+      "parameter": "_sharpnesses",
+      "max_cpu_adam_error": 0.0,
+      "matches_saved_update": true
+    }
+  ],
+  "divergence_examples": [
+    {
+      "parameter": "_angles",
+      "index": [
+        135
+      ],
+      "initial": 2.4345693588256836,
+      "first_gradient": 1.868290411266571e-07,
+      "replay_gradient": 1.434698617686081e-07,
+      "first_parameter": 2.3403539657592773,
+      "replay_parameter": 2.3417787551879883,
+      "parameter_difference": 0.0014247894287109375
+    },
+    {
+      "parameter": "_angles",
+      "index": [
+        3996
+      ],
+      "initial": 0.11108037829399109,
+      "first_gradient": -9.745594553578485e-09,
+      "replay_gradient": -1.141480954203189e-08,
+      "first_parameter": 0.1600700318813324,
+      "replay_parameter": 0.16398829221725464,
+      "parameter_difference": 0.003918260335922241
+    },
+    {
+      "parameter": "_angles",
+      "index": [
+        4113
+      ],
+      "initial": 2.5964550971984863,
+      "first_gradient": -8.981226429227718e-09,
+      "replay_gradient": -1.458639697915487e-08,
+      "first_parameter": 2.643420457839966,
+      "replay_parameter": 2.6553421020507812,
+      "parameter_difference": 0.01192164421081543
+    },
+    {
+      "parameter": "_kernel_colours",
+      "index": [
+        2549,
+        2
+      ],
+      "initial": -0.02966982126235962,
+      "first_gradient": -8.682302450324642e-07,
+      "replay_gradient": -2.6439115572429728e-06,
+      "first_parameter": -0.023585600778460503,
+      "replay_parameter": -0.023538712412118912,
+      "parameter_difference": 4.688836634159088e-05
+    },
+    {
+      "parameter": "_kernel_colours",
+      "index": [
+        2680,
+        0
+      ],
+      "initial": -0.09715214371681213,
+      "first_gradient": -1.9348681234987453e-06,
+      "replay_gradient": 0.0,
+      "first_parameter": -0.09102948755025864,
+      "replay_parameter": -0.09715214371681213,
+      "parameter_difference": 0.006122656166553497
+    },
+    {
+      "parameter": "_kernel_colours",
+      "index": [
+        2680,
+        1
+      ],
+      "initial": -0.2971239387989044,
+      "first_gradient": -3.990473032899899e-06,
+      "replay_gradient": 0.0,
+      "first_parameter": -0.29098501801490784,
+      "replay_parameter": -0.2971239387989044,
+      "parameter_difference": 0.006138920783996582
+    },
+    {
+      "parameter": "_kernel_colours",
+      "index": [
+        2680,
+        2
+      ],
+      "initial": -0.24143452942371368,
+      "first_gradient": -3.182227601428167e-06,
+      "replay_gradient": 0.0,
+      "first_parameter": -0.2352995127439499,
+      "replay_parameter": -0.24143452942371368,
+      "parameter_difference": 0.006135016679763794
+    },
+    {
+      "parameter": "_kernel_colours",
+      "index": [
+        3566,
+        1
+      ],
+      "initial": -0.09712392091751099,
+      "first_gradient": -1.924546779719094e-07,
+      "replay_gradient": -1.5861783708714938e-07,
+      "first_parameter": -0.09127360582351685,
+      "replay_parameter": -0.09133461117744446,
+      "parameter_difference": 6.1005353927612305e-05
+    },
+    {
+      "parameter": "_kernel_colours",
+      "index": [
+        4374,
+        1
+      ],
+      "initial": -0.21477098762989044,
+      "first_gradient": -2.229977781098569e-06,
+      "replay_gradient": -9.669965095326916e-08,
+      "first_parameter": -0.20864416658878326,
+      "replay_parameter": -0.20919348299503326,
+      "parameter_difference": 0.00054931640625
+    },
+    {
+      "parameter": "_kernel_colours",
+      "index": [
+        4374,
+        2
+      ],
+      "initial": -0.15516002476215363,
+      "first_gradient": -4.637553843167552e-07,
+      "replay_gradient": 1.33653429656988e-06,
+      "first_parameter": -0.14913563430309296,
+      "replay_parameter": -0.16126862168312073,
+      "parameter_difference": 0.012132987380027771
+    }
+  ],
+  "gpu_initialized": false,
+  "scope": "Same installed Adam on CPU using each GPU replay's own saved gradients and original initialization/configuration. This verifies the saved Adam updates, not the origin of forward/gradient variability.",
+  "source_run": "experiments/converse_heat_kernel_splatting/results/direct_tiles_native_20261117T040251_653086Z_b79be9f3b5",
+  "baseline_or_thresholds_changed": false
+}
