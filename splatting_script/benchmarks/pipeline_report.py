@@ -8,7 +8,7 @@ import json
 import math
 from pathlib import Path
 
-from splatting_script.benchmarks.pipeline_trace import distribution
+from splatting_script.benchmarks.pipeline_trace import distribution, STAGES
 from splatting_script.benchmarks.training_research import backend_label, TRAIN_VIEWS
 
 
@@ -202,6 +202,145 @@ def write_csv(path, rows, fields):
         writer.writeheader();writer.writerows(rows)
 
 
+PIPELINE_PHASES = (
+    ('zero_grad','Clear gradients'), ('visibility.rasterization_and_preparation','Refresh visibility'),
+    ('visibility.reuse','Reuse fixed visibility'), ('forward','Forward propagation'),
+    ('loss','Calculate loss'), ('backward','Backward propagation'), ('optimizer','Optimizer updates'),
+    ('optimizer.geodesic','Move kernels along the mesh'), ('optimizer.other','Other parameter optimizers'),
+    ('optimizer.scheduler_and_clamp','Schedulers and parameter constraints'),
+)
+
+STAGE_DESCRIPTIONS = {
+    'native.source_state':'Prepare learned pointwise kernels', 'native.source_heat':'Cache source heat and normalization',
+    'native.faiss_build':'Build source FAISS index', 'native.knn_search':'Find pointwise kernel neighbors',
+    'native.query_preparation':'Prepare query points', 'native.distances':'Calculate neighbor distances',
+    'native.spectral_gather':'Gather query spectral data', 'native.spectral_heat':'Evaluate pointwise spectral heat',
+    'native.distance_weighting':'Weight heat by intrinsic distance', 'native.filter':'Filter kernel contributions',
+    'native.top30':'Select strongest 30 contributions', 'native.rgb':'Weighted RGB reconstruction',
+    'native.shading':'Pointwise shading (parent)', 'native.output':'Apply model RGB output transform',
+    'source.grid_selection':'Select anisotropy/orientation grid', 'source.spectral_gather':'Gather source eigenvectors',
+    'hybrid.source_state':'Prepare learned spectral sources', 'support.csr':'Build kernel–triangle support (parent)',
+    'support.distances':'Triangle spectral centroid distances', 'support.selector_dispatch':'Dispatch candidate selection',
+    'support.legacy_candidates':'Legacy candidate selection', 'support.fused_selection':'Fused candidate selection',
+    'support.tiled_selection':'Merge source tiles for candidate selection',
+    'support.tiled_threshold_output':'Apply triangle radius/threshold and order support',
+    'support.threshold':'Candidate distance threshold', 'support.topk':'Candidate nearest selection',
+    'support.sort':'Order selected support', 'support.scans':'Scan support counts',
+    'support.packing':'Pack kernel–triangle pairs', 'support.validation':'Check support validity',
+    'hybrid.coefficient_topology':'Prepare triangle vertices for coefficients',
+    'hybrid.corner_coefficients':'Prepare corner coefficients (parent)',
+    'spectral.coefficient_forward':'Evaluate three-corner heat and distance coefficients',
+    'hybrid.queue':'Schedule kernel–tile work (parent)', 'hybrid.queue_grouping':'Group kernel–tile queue on GPU',
+    'hybrid.splat':'Splat and reconstruct (parent)',
+    'hybrid.emission':'Fused barycentric interpolation, distance weighting, filtering and emission',
+    'hybrid.top30':'Select strongest 30 contributions', 'hybrid.rgb':'Weighted RGB reconstruction',
+    'backward.loss':'Differentiate loss', 'backward.rgb':'Differentiate RGB/color reconstruction',
+    'backward.weights':'Differentiate interpolation, weights and filters',
+    'spectral.coefficient_backward':'Differentiate spectral corner coefficients',
+    'backward.source_state':'Differentiate learned source state',
+    'backward.native_spectral':'Differentiate pointwise spectral/source operations',
+    'backward.native_filter':'Differentiate pointwise filters',
+    'backward.native_rgb':'Differentiate pointwise RGB/top-30 operations',
+    'backward.native_distance':'Differentiate pointwise distances/weighting',
+    'optimizer.geodesic_trace':'Trace kernel movement on fixed mesh',
+    'support.triangle_embedding_setup':'Prepare fixed triangle spectral bounds',
+    'visibility.tile_geometry':'Prepare fixed visible pixel/tile geometry',
+    'visibility.rasterization':'Rasterize visible triangles',
+}
+STAGE_DESCRIPTIONS.update(dict(PIPELINE_PHASES))
+
+
+def inclusive_gpu_ms(profile, stage):
+    """Read new and historical profiles using the recorded update denominator."""
+    value=profile.get('stages',{}).get(stage,{})
+    if 'inclusive_gpu_ms_per_update' in value: return value['inclusive_gpu_ms_per_update']
+    activity=value.get('inclusive_cuda_activity') or {}
+    total=activity.get('kernel_duration_sum_ms')
+    count=profile.get('profiled_updates')
+    return total/count if total is not None and count else None
+
+
+def pipeline_markdown(rows):
+    """Keep complete measured pipeline diagnostics in the single retained report."""
+    lines=['### Pipeline calculations','',
+        'These timings come from separate instrumented profile runs, not the speed runs above. '
+        'All times below are milliseconds per profiled update unless marked as setup totals. '
+        'GPU time is correlated CUPTI kernel-duration sum, not CPU enqueue time or GPU utilization.','',
+        '| Phase | Original host ms | Original GPU ms | HKS host ms | HKS GPU ms |',
+        '|---|---:|---:|---:|---:|']
+    for stage,label in PIPELINE_PHASES:
+        values=[]
+        for backend in ('native','hybrid'):
+            profile=rows.get(backend,{}).get('profile') or {}
+            record=profile.get('stages',{}).get(stage,{})
+            values.extend([number((record.get('host_wall_ms') or {}).get('mean')),
+                           number(inclusive_gpu_ms(profile,stage))])
+        lines.append('| '+label+' | '+' | '.join(values)+' |')
+    lines+=['','Parent and child stages overlap: do not add forward to its substeps, or optimizer '
+        'to geodesic/other updates. GPU durations can overlap across streams. '
+        'N/A means absent, unavailable, unmatched or not measured; it is not zero.','']
+    for backend in ('native','hybrid'):
+        row=rows.get(backend,{})
+        profile=row.get('profile')
+        gate=row.get('profile_validation')
+        validation=('passed' if gate and gate.get('passed') else
+                    'failed' if gate else 'not recorded; observer parity unverified')
+        lines+=['#### '+backend_label(backend),'',
+            'Profile status: '+str(row.get('profile_status','not_available'))+
+            '; matched controls: '+str(row.get('profile_controls',{}).get('matched',False))+
+            '; observer RGB/VJP gate: '+validation+'.','']
+        if not profile:
+            lines+=['Detailed calculations: N/A (missing or unmatched profile).','']
+            continue
+        lines+=['Profiled updates: '+str(profile.get('profiled_updates','N/A'))+
+            '; synchronized diagnostic update mean: '+number((profile.get('synchronized_update_ms') or {}).get('mean'))+
+            ' ms; final synchronization wait mean: '+number((profile.get('final_sync_wait_ms') or {}).get('mean'))+' ms.',
+            'Unattributed GPU events: '+str(profile.get('unattributed_gpu_events','N/A'))+
+            '. Residual work stays in its parent stage; it is not invented as a separately timed calculation.','',
+            '| Calculation / recorded scope | Status | Calls/update | Host ms (inclusive) | CPU self wall ms | GPU ms (inclusive) | GPU ms (leaf) |',
+            '|---|---|---:|---:|---:|---:|---:|']
+        stages=profile.get('stages',{})
+        names=list(dict.fromkeys([name for name in STAGES if STAGES[name] in ('both',backend)]+list(stages)))
+        for name in names:
+            stage=stages.get(name,{})
+            if STAGES.get(name,'both') not in ('both',backend) and stage.get('status')!='measured': continue
+            if name.startswith('diagnostic.'): continue
+            label=STAGE_DESCRIPTIONS.get(name,name.replace('_',' '))
+            values=[label+' (`'+name+'`)',str(stage.get('status','N/A')),
+                number((stage.get('calls_per_update') or {}).get('mean')),
+                number((stage.get('host_wall_ms') or {}).get('mean')),
+                number(stage.get('cpu_self_wall_ms_per_update')),
+                number(inclusive_gpu_ms(profile,name)), number(stage.get('exclusive_gpu_ms_per_update'))]
+            lines.append('| '+' | '.join(values)+' |')
+        lines+=['','Host/call values require an explicit observer scope; trace-inferred operations may only '
+            'have CPU self wall and GPU timing. CPU self wall includes waits. Leaf GPU time assigns each '
+            'correlated kernel to its innermost scope. Native backward substeps require matching autograd '
+            'sequence/thread provenance; unclassified gradients remain in total backward.','',
+            'HKS interpolation, distance weighting and contribution filtering run together in the emission '
+            'kernel; their independent durations cannot be measured from this fused kernel.','']
+        setup=profile.get('setup_stages',{})
+        if setup:
+            lines+=['One-time setup in the diagnostic process (excluded from recurring update time; nested totals overlap):','',
+                '| Setup scope | Calls | Host total ms | CUDA event interval total ms |','|---|---:|---:|---:|']
+            for name,stage in setup.items():
+                lines.append('| '+name+' | '+number(stage.get('calls'))+' | '+number(stage.get('host_wall_total_ms'))+
+                    ' | '+number(stage.get('cuda_event_interval_total_ms'))+' |')
+            lines+=['','Setup CUDA events include host gaps; they are not isolated kernel durations.','']
+        counts={}
+        for update in profile.get('work',[]):
+            for record in update.get('records',[]):
+                for key in ('visible_triangles','kernel_triangle_pairs','expanded_triangle_tile_incidences',
+                            'visible_pixels','kernel_tile_items','emitted_pixel_contributions',
+                            'selected_contributions','discarded_contributions'):
+                    if record.get(key) is not None: counts.setdefault(key,[]).append(record[key])
+        if counts:
+            lines+=['| Measured work | Mean per sampled forward |','|---|---:|']
+            for name,values in counts.items():
+                lines.append('| '+name+' | '+number(distribution(values)['mean'])+' |')
+            lines+=['']
+    return lines
+
+
 def compact_markdown(data, workflow):
     """Self-contained statistics/failure summary with no links to scratch files."""
     lines=['# HKTex (Original) vs HKTex Splat (Ours)','',
@@ -259,6 +398,7 @@ def compact_markdown(data, workflow):
             if profile:
                 lines+=['  Top measured GPU stages: '+', '.join(stage['stage'] for stage in profile.get('gpu_bottlenecks',[])[:3])+'.']
         lines+=['']
+        lines+=pipeline_markdown(rows)
     lines+=['## Job status','', '| Stage | Status |','|---|---|']
     for job in workflow['jobs']:
         status=job.get('status','not_executed')
@@ -330,6 +470,7 @@ def markdown(data):
             'Common native-field PSNR difference (training / held-out): '+number(pair['training_psnr_difference_db'])+' / '+number(pair['heldout_psnr_difference_db'])+' dB.',
             'Deployed PSNR difference (training / held-out): '+number(pair['deployed_training_psnr_difference_db'])+' / '+number(pair['deployed_heldout_psnr_difference_db'])+' dB.',
             'Missing controls: '+str(pair['controls']['missing'])+'. Differing controls: '+str(pair['controls']['different'])+'.','']
+        text+=pipeline_markdown(rows)
         for backend,row in rows.items():
             text += ['### '+backend_label(backend),'', 'Initial model SHA256: `'+str(row['initial_model_sha256'])+'`; source tree SHA256: `'+str(row['source_tree_sha256'])+'`. Full controls/assets/software are in benchmark_report.json and the original manifests.',
                 '', 'Profile status: '+row['profile_status']+'. Profile controls matched: '+str(row['profile_controls']['matched'])+'.','']
@@ -340,11 +481,7 @@ def markdown(data):
             profile=row['profile']
             if not profile:
                 text+=['Detailed timings/memory: N/A (missing or unmatched diagnostic profile).',''];continue
-            text+=['| Operation | Host wall mean ms (inclusive) | CUDA event interval mean ms | CPU self wall ms/update | GPU kernel ms/update (exclusive leaf) | GPU sum / update wall % |','|---|---:|---:|---:|---:|---:|']
-            for name,stage in profile['stages'].items():
-                text.append('| '+name+' | '+number((stage.get('host_wall_ms') or {}).get('mean'))+' | '+number((stage.get('cuda_event_interval_ms') or {}).get('mean'))+' | '+number(stage.get('cpu_self_wall_ms_per_update'))+
-                    ' | '+number(stage.get('exclusive_gpu_ms_per_update'))+' | '+number(stage.get('exclusive_gpu_sum_percent_of_update_wall'))+' |')
-            text+=['','Parent/child scopes overlap. GPU sums can overlap across streams; percentages are not an additive wall-time decomposition.','',
+            text+=[
                    'Top CPU self-wall bottlenecks (includes waits): '+', '.join(r['stage'] for r in profile['cpu_bottlenecks'])+'.',
                    'Top GPU exclusive-kernel bottlenecks: '+', '.join(r['stage'] for r in profile['gpu_bottlenecks'])+'.','',
                    '| Measured storage component | Bytes |','|---|---:|']
@@ -442,7 +579,9 @@ def report(index, output, make_plots=True):
         for name,value in profile['stages'].items():
             timing=dict(prefix,stage=name,status=value['status'],
                 host_wall_mean_ms=(value.get('host_wall_ms') or {}).get('mean'),
+                calls_per_update=(value.get('calls_per_update') or {}).get('mean'),
                 cpu_self_wall_ms_per_update=value.get('cpu_self_wall_ms_per_update'),
+                inclusive_gpu_ms_per_update=inclusive_gpu_ms(profile,name),
                 exclusive_gpu_ms_per_update=value.get('exclusive_gpu_ms_per_update'),
                 gpu_percent_update_wall=value.get('exclusive_gpu_sum_percent_of_update_wall'))
             for metric in ('host_wall_ms','process_cpu_ms','cuda_event_interval_ms','cpu_self_wall_ms','exclusive_gpu_kernel_ms'):

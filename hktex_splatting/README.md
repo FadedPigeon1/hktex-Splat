@@ -186,6 +186,13 @@ to the same harness. Use `--help` to inspect its controls.
 
 ## Compare original HKTex and HKS
 
+The single Markdown comparison report includes detailed pipeline timings for
+both renderers: forward, loss, backward, optimizer updates and their measured
+substeps. It also reports captured geometry setup and work counts. These come
+from separate diagnostic profiles, so speed measurements remain uninstrumented.
+See [the profiler guide](../docs/BENCHMARK_PROFILER.md#complete-pipeline-calculations-in-the-markdown-report)
+for timing definitions and fused-operation limits.
+
 ### Validate and run the 5,000-kernel experiment
 
 Activate the environment installed above, open a terminal in the repository

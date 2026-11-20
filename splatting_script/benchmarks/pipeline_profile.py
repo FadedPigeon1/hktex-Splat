@@ -227,6 +227,7 @@ class PipelineProfiler:
             FusedResidentSupportGeometry,
         )
         from hktex_splatting.rendering.mesh_visibility_raster import BVHRaster
+        from hktex_splatting.rendering.resident import ResidentTopology
         from hktex_splatting.rendering import heat_kernel_splatting as direct_tiles
         from hktex_splatting.triton import (
             spectral_heat_coefficients as coefficient_gpu,
@@ -247,6 +248,9 @@ class PipelineProfiler:
                 (e.knn_gather,'gather_queries','native.spectral_gather'), (e.knn_heat,'build','native.source_heat'),
                 (e.knn_heat,'query','native.spectral_heat'), (m,'kernel_filter_func','native.filter'),
                 (m,'diffuse_heat_kernels','native.shading'), (LiveHeatField,'sources','hybrid.source_state'),
+                (m,'forward','native.output'),
+                (LiveHeatField,'coefficients','hybrid.corner_coefficients'),
+                (ResidentTopology,'__init__','hybrid.coefficient_topology'),
                 (PreparedSupport,'candidate_rows','support.legacy_candidates'),
                 (PreparedSupport,'__init__','support.triangle_embedding_setup'),
                 (direct_tiles.TileSurface,'__init__','visibility.tile_geometry'),
