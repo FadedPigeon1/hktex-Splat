@@ -1,106 +1,146 @@
-# HKTex (Original) versus HKTex Splat (Ours) commands
+# HKS training and benchmark commands
 
-Workflow execution defaults to **one Markdown file**: `--output comparison.md`.
-Bare Markdown filenames are saved under `experiments/`; explicit paths keep
-their specified location.
-New logs, snapshots, images, traces and compiler caches are temporary and cleaned
-up afterward. Existing results are preserved. Add `--keep-artifacts` with a new
-output directory for full research/debugging artifacts. Rendering, measurements
-and correctness gates are the same in both output modes.
+Use lowercase `splatting_script` module names from the repository root with the
+HKS environment activated. See the [HKS README](../hktex_splatting/README.md) for
+installation, required mesh/spectral assets, lighting and implementation details.
+Original HKTex's own experiment entry point remains `optimisation.py`.
 
-The main command is `experiments.compare_backends`; execution uses
-[`benchmarks/renderer_comparison.py`](benchmarks/renderer_comparison.py).
-The two implementations are `native` (HKTex Original) and `hybrid` (HKTex Splat Ours).
-`original`/`2dgs` remain compatibility aliases for these same implementations.
-Preview is the default.
+## Recommended: adaptive camera training with lighting
 
-The separate `experiments.train_surface` command runs the original UV training
-lifecycle with native or HKS surface-sample adapters, preserving configured
-importance sampling and density controllers. See [full surface training](../docs/FULL_SURFACE_TRAINING.md).
-This experimental protocol retains verification checkpoints and is distinct
-from the camera-image comparison documented below.
-
-`train_surface --supervision camera` instead runs adaptive training on rasterized
-camera pixels. The optional [fresh GPU camera pipeline](../docs/GPU_CAMERA_PIPELINE.md)
-uses nvdiffrast and device-resident HKS geometry. `benchmarks.camera_scaling` pairs
-native/HKS at matched resolutions and reports training/worker time with PSNR.
-These full-training protocols retain verification receipts; the single-Markdown
-artifact policy above applies to `benchmarks.compare_training`.
-
-Use the lowercase `splatting_script` package for every module command. The former
-mixed-case command namespace has been removed; older cleanup reports retain its
-historical paths as recovery records.
+The current `compare-128` preset compares native HKTex with spectral-support HKS
+using fresh GPU triangle rasterization, shared targets and analytic GGX lighting,
+original optimizers and original density policies. `hybrid` means HKS; it does
+not select conventional 2D Gaussian Splatting. The field evaluation changes,
+while original HKTex source files remain intact.
 
 ```bash
-HK_PY=${HK_PY:-python}
-"$HK_PY" -B -m splatting_script.experiments.compare_backends --backend native
-"$HK_PY" -B -m splatting_script.experiments.compare_backends --backend hybrid
-"$HK_PY" -B -m splatting_script.benchmarks.compare_training workflow
-"$HK_PY" -B -m splatting_script.benchmarks.compare_training workflow --scaling
+# Preview only: no Torch import or GPU work.
+python -B -m splatting_script.experiments.train_surface \
+  --preset compare-128 --asset converse
+
+# Initialize and verify both implementations; no training loop.
+python -B -m splatting_script.experiments.train_surface \
+  --preset compare-128 --asset converse --verify-only --execute
+
+# Short training smoke check.
+python -B -m splatting_script.experiments.train_surface \
+  --preset compare-128 --asset converse --iterations 40 --kernels 1000 \
+  --execute --output experiments/converse_lighting_smoke
+
+# Full comparison: 5,000 initial kernels, 5,000 updates per method.
+python -B -m splatting_script.experiments.train_surface \
+  --preset compare-128 --asset converse \
+  --execute --output experiments/converse_lighting_full
 ```
 
-These commands do not import Torch or request/launch GPU work. The standard workflow
-previews ten jobs; scaling previews 111. Both renderer preflights and their paired
-alignment gate must pass before capacity pilots or measurements. Existing GPU and capacity checks
-control actual feasibility. The main training YAML and default numeric controls remain.
+Use a new output directory for each execution. Initialization and gates already
+run before full training; a separate manual `INITIAL` variable is unnecessary.
+Replace `converse` with a prepared configured asset. The preparation CLI supports
+fewer assets than the training CLI; selecting an asset does not obtain its mesh.
+The provided bowl is unrun because it lacks the required color texture.
 
-## Execute on a CUDA GPU
+Useful explicit overrides:
 
-For the 5,000-source GPU validation and 1,000-update comparison commands,
-follow the [HKS run guide](../hktex_splatting/README.md#validate-and-run-the-5000-kernel-experiment).
-Slurm is optional; use your cluster scheduler when applicable. A100 is the
-validated hardware; run the correctness gate on other supported CUDA GPUs too.
-Run the correctness gate before the full workload. The documented diagnostic
-workflow allows native repeatability variation and keeps HKS validation strict.
+| Option | Effect |
+| --- | --- |
+| `--backend hybrid` | Train/verify HKS only. |
+| `--backend native` | Train/verify native HKTex only. |
+| `--resolution 256` | Override image resolution; check GPU memory and correctness first. |
+| `--lighting none` | Unlit material RGB instead of analytic GGX. |
+| `--lighting diffuse` | Analytic diffuse-only lighting. |
+| `--material-roughness 0.2` | Change fixed GGX roughness, not a learned material parameter. |
+| `--light-direction 0.3 0.8 0.6` | Set the world-space surface-to-light direction. |
+| `--support-domain graph` | Older approximate hop-limited support; spectral is selected by the preset. |
+
+The preset uses a shared boundary-stop overlay and bounded initial native
+approximation, both recorded in receipts. Independent implementation/gradient
+checks remain strict. An initial quality allowance does not guarantee final PSNR.
+Without the preset, legacy CLI defaults remain surface supervision, graph support
+and no lighting. Do not infer the preset from the entry point's filename.
+
+## Reports, checkpoints and images
+
+Adaptive `train_surface` runs retain `comparison.md`, workflow/worker JSON,
+provenance, verification receipts, logs, kernel-count trajectories and checkpoint
+archives. These are reproducibility records, not a resume interface. They are
+kept under the selected output directory, which is excluded from source publishing.
+This workflow does not automatically export comparison PNGs. The preset disables
+original training plots; renderer-benchmark image exports are a separate workflow.
+
+Use training interval, whole-process time and forward-only latency for their
+respective scopes. Compare PSNR and final kernel counts alongside time/memory.
+A completed run alone is not evidence of a speedup or dense native equivalence.
+Shared analytic lighting is not ray tracing or the complete original Mitsuba run.
+
+## Profile separately
 
 ```bash
-# Create matched initialization, preflights, pilots, paired speed runs and late profiles.
-"$HK_PY" -B -m splatting_script.benchmarks.compare_training workflow \
-  --execute --output /path/to/a/new/workflow_directory
+python -B -m splatting_script.experiments.train_surface \
+  --preset compare-128 --asset converse --iterations 160 \
+  --profile-start 100 --profile-steps 8 --execute \
+  --output experiments/converse_lighting_profile
+```
 
-# Separate RGB/support/gradient/optimizer gate; never speed evidence.
-"$HK_PY" -B -m splatting_script.experiments.compare_backends \
+This records synchronized stage diagnostics with overhead. Nested stages overlap;
+do not add them or use the profiled run for speedup claims. The above short
+window does not profile later density events. To examine those, choose enough
+updates and a window covering the configured controller schedule.
+
+## Earlier fixed-kernel camera benchmark
+
+This separate workflow isolates renderer/update costs with fixed kernel counts.
+It is not the recommended full adaptive training comparison above. Preview:
+
+```bash
+python -B -m splatting_script.benchmarks.compare_training workflow
+```
+
+Execute only after assets and correctness checks pass:
+
+```bash
+python -B -m splatting_script.benchmarks.compare_training workflow \
+  --kernel-counts 5000 --resolutions 128 --iterations 1000 --seed 0 \
+  --execute --output experiments/comparison_fixed_kernels.md
+```
+
+Its default compact mode produces a Markdown report and removes private temporary
+artifacts. Add `--keep-artifacts` and a new output directory for retained debugging
+records. This policy applies to `compare_training`, not adaptive `train_surface`.
+The workflow includes initialization, strict preflights, pilots, unprofiled speed
+runs and separate profiles. Do not bypass a failed gate to obtain a speed claim.
+
+For a standalone renderer preview and bounded GPU validation:
+
+```bash
+python -B -m splatting_script.experiments.compare_backends --backend hybrid
+python -B -m splatting_script.experiments.compare_backends \
   --backend hybrid --execute --validate-only --support-selector fused
-
-# Separate diagnostic profile, with observer-on/off RGB/VJP gate.
-"$HK_PY" -B -m splatting_script.experiments.compare_backends \
-  --backend hybrid --execute --pipeline-profile --profile-validate \
-  --profile-start 40 --profile-steps 8 --iterations 48
 ```
 
-Native/hybrid comparisons share initialization, seed, camera, loss and optimizer
-controls. Research speed runs retain quality/PSNR, parameter-health checks and
-archival checkpoints; profiling is separate. The runtime profile/memory/quality
-readers remain compatible with historical records. Source matching is never bypassed.
+The older harness accepts `original`/`2dgs` aliases for `native`/`hybrid`.
+`--support-selector legacy|fused` and bounded large-source tiled selection belong
+to that harness. They are different from `train_surface --support-domain
+spectral|graph`. There is no 4,096-source model limit. Shared resident/eager
+controls remain internal correctness references, not standalone training modes.
 
-`--support-selector legacy|fused` is preserved. Above 4,096 sources, fused selection
-uses bounded Triton source tiles and deterministic distance/source-ID ties.
-Source count alone no longer enables a legacy fallback or causes the workflow
-to pass `--allow-selector-fallback`. Unsupported input guards remain explicit.
-See [selector validation and compatibility](../docs/TILED_SELECTOR.md).
+## Other retained workflows
 
-`--debug-support` downloads/checks live candidate rows and CSR, writes a failure
-snapshot if necessary, then raises before invalid work reaches tile emission.
-It does not repair bad support or weaken assertions. Diagnostic timing is excluded
-from research speed evidence. Snapshots are not optimizer/RNG resume checkpoints.
+| Entry point | Scope |
+| --- | --- |
+| `splatting_script.benchmarks.camera_scaling` | Paired adaptive training at multiple resolutions; use its preview/help to inspect propagated controls. |
+| `splatting_script.benchmarks.compare_rendering` | Original-render versus HKS render-only comparison, not full training. |
+| `splatting_script.benchmarks.spectral_distances` | Selector-distance microbenchmarks, not end-to-end training. |
+| `splatting_script.experiments.train_surface --supervision surface` | Original mesh-sample supervision; no camera triangle rasterization. |
 
-The benchmark retains internal resident and full-spectrum eager controls solely for
-its correctness comparisons. Their VJP/optimizer tolerances and the observer gate
-remain. They cannot be selected as standalone training backends.
+All execution needs a usable NVIDIA CUDA GPU; Slurm is optional. Tools never
+request allocations automatically. CPU previews need neither GPU nor prepared
+assets. The former mixed-case namespace and retired `splat`/`resident` training
+backends, projected-footprint options and custom density/optimizer policies are
+not supported. Runtime safety checks and original density policies remain.
 
-## Retired interfaces
-
-The old forward trainer, `splat`/`resident` backend commands, alternative direct
-selection modes and projected footprint pruning are discontinued. There is no
-`--footprint-cutoff`, `--bounds`, `--nearest-backend` or `--selection` CLI option.
-Renamed-module aliases such as `benchmarks.direct_tiles` and `modules.live_field`
-are retired; use canonical filenames. Original native/HKS state-dictionary
-checkpoints remain supported. Arbitrary object pickles using retired module paths
-require the archived code version.
-
-Use [the profiler guide](../docs/BENCHMARK_PROFILER.md),
-[the matched benchmark protocol](../docs/HKTEX_VS_HKS_BENCHMARK.md),
-[research protocol](../docs/HKTEX_RESEARCH_TRAINING.md),
-[current architecture](../docs/HEAT_KERNEL_SPLATTING_ARCHITECTURE.md), and
-[cleanup/recovery report](../docs/HKS_PIPELINE_ONLY_CLEANUP.md).
-Previous cleanup and rename reports preserve historical commands and results.
+See the [current implementation/run guide](../hktex_splatting/README.md),
+[architecture](../docs/HEAT_KERNEL_SPLATTING_ARCHITECTURE.md),
+[profiler guide](../docs/BENCHMARK_PROFILER.md),
+[work log](../docs/HKS_WORK_LOG.md) and
+[cleanup/recovery record](../docs/HKS_RESULTS_CLEANUP.md). Earlier reports retain
+historical commands; use the current READMEs for new runs.

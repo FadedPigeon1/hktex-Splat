@@ -16,9 +16,25 @@ Heat Kernel Textures (HKTex) are an intrinsic texture representation for triangu
 
 HKTex avoids UV seams, distortion, wasted atlas space, duplicated vertices, and uneven texel resolution. The representation can be fitted from an existing texture or from multi-view images and integrates with physically based rendering.
 
-> **Heat-Kernel Splatting extension:** For the triangle-supported, tile-based renderer,
-> its pipeline, training commands and HKTex comparisons, see the separate
-> [Heat-Kernel Splatting README](hktex_splatting/README.md).
+> **Heat-Kernel Splatting extension:** Current HKS development combines
+> triangle-supported GPU tile splatting with separate analytic material lighting.
+> See the [HKS README](hktex_splatting/README.md) for what is implemented,
+> installation, short training commands and measured comparisons. The instructions
+> below describe original HKTex; its implementation remains in `hktex/`.
+
+With the HKS environment and matching assets already prepared, preview the current
+128×128 camera-training comparison from the repository root:
+
+```bash
+python -B -m splatting_script.experiments.train_surface \
+  --preset compare-128 --asset converse
+```
+
+Add `--verify-only --execute` for correctness checks or `--execute` for the full
+5,000-update comparison. The preset uses fresh GPU rasterization, spectral-support
+HKS, original density/optimizer policies and shared analytic GGX lighting.
+It does not run the complete original Mitsuba experiment. See the
+[run guide](hktex_splatting/README.md#run) before starting a GPU job.
 
 ## Highlights
 

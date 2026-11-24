@@ -68,18 +68,19 @@ by the renderer. The preprocessing command only runs when explicitly given both
 
 ```bash
 python -B -m hktex_splatting.prepare_assets --check
-python -B -m splatting_script.experiments.compare_backends \
-  --backend hybrid --kernels 5000 --resolution 32 --iterations 1 \
-  --support-selector fused --validate-only --execute
+python -B -m splatting_script.experiments.train_surface \
+  --preset compare-128 --asset converse --verify-only --execute
 ```
 
 The CPU check verifies paths, required camera views and mesh checksum; it does
 not establish numerical compatibility of a supplied spectral archive. The GPU
-gate checks the actual rendering/gradient path. Regenerated eigensystems may
-vary numerically across solver/software environments; use the recorded archive
+gate checks both methods with fresh rasterization, spectral-support HKS and
+shared analytic GGX lighting. It does not train or perform ray tracing.
+Regenerated eigensystems may vary numerically across solver/software environments;
+use the recorded archive
 and matching environment when exact historical numerical reproduction is needed.
 
 All asset files are ignored by Git. The guide, raw/prepared placeholders and
-`experiments/converse_fidelity/cameras.json` remain source-controlled.
+`data/converse/cameras.json` remain source-controlled.
 For the main workflow, see the [HKS run guide](../../hktex_splatting/README.md)
 and [training protocol](../../docs/HKTEX_RESEARCH_TRAINING.md).
