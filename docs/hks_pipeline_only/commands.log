@@ -1,0 +1,45 @@
+{
+  "previews": 11,
+  "controls_match_after_removing_only_retired_default_options": true,
+  "normalization": [
+    "module-docstring scope",
+    "retired bounds/nearest fields",
+    "workflow --selection hybrid / --footprint-cutoff 0 tokens"
+  ],
+  "default_workflow_jobs": 7,
+  "scaling_workflow_jobs": 75,
+  "retired_interfaces_fail_before_gpu_import": [
+    [
+      "--backend",
+      "splat"
+    ],
+    [
+      "--backend",
+      "resident"
+    ],
+    [
+      "--footprint-cutoff",
+      ".1"
+    ],
+    [
+      "--bounds",
+      "full"
+    ],
+    [
+      "--nearest-backend",
+      "torch"
+    ],
+    [
+      "--selection",
+      "hybrid"
+    ],
+    [
+      "--legacy-trainer"
+    ],
+    [
+      "--gpu-resident"
+    ]
+  ],
+  "torch_imported": false,
+  "gpu_executed": false
+}

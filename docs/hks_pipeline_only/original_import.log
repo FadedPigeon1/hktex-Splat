@@ -1,0 +1,26 @@
+jitc_llvm_init(): LLVM API initialization failed ..
+/home/franciscotorres2124/.config/matplotlib is not a writable directory
+Matplotlib created a temporary cache directory at /tmp/matplotlib-4mh1gncz because there was an issue with the default path (/home/franciscotorres2124/.config/matplotlib); it is highly recommended to set the MPLCONFIGDIR environment variable to a writable directory, in particular to speed up the import of Matplotlib and to better support multiprocessing.
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/scratch/user/franciscotorres2124/research/hktex/hktex/__init__.py", line 43, in <module>
+    from . import data, modules, trainers
+  File "/scratch/user/franciscotorres2124/research/hktex/hktex/data/__init__.py", line 1, in <module>
+    from . import (
+  File "/scratch/user/franciscotorres2124/research/hktex/hktex/data/base.py", line 9, in <module>
+    from hktex.utils import (
+  File "/scratch/user/franciscotorres2124/research/hktex/hktex/utils/__init__.py", line 18, in <module>
+    from .mitsuba import *
+  File "/scratch/user/franciscotorres2124/research/hktex/hktex/utils/mitsuba.py", line 6, in <module>
+    mi.set_variant("cuda_ad_rgb")
+ImportError: jit_cuda_init(): the CUDA backend is not available because cuInit() failed.
+There are two common explanations for this type of failure:
+
+ 1. your computer simply does not contain a graphics card that supports CUDA.
+
+ 2. your CUDA kernel module and CUDA library are out of sync. Try to see if you
+    can run a utility like 'nvidia-smi'. If not, a reboot will likely fix this
+    issue. Otherwise reinstall your graphics driver. 
+
+ The specific error message produced by cuInit was
+   "no CUDA-capable device is detected"

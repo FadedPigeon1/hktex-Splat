@@ -1,0 +1,3 @@
+Compiling serial float64 raster kernel...
+JIT compilation only (no raster execution, cache disabled): 17.757852 s
+Synthetic parity against both NumPy baselines and surface reconstruction: 42 cases passed
