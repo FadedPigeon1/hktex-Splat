@@ -1,0 +1,225 @@
+MM .gitignore
+MM README.md
+ D Splatting_script/README.md
+AD Splatting_script/validation/run_retained_cpu.py
+AM data/converse/README.md
+A  data/converse/prepared/.gitkeep
+A  data/converse/prepared/textures/.gitkeep
+A  data/converse/raw/.gitkeep
+AD docs/CONSOLIDATION.md
+AD docs/CONSOLIDATION_STAGING_PATHS.txt
+AM docs/ORIGINAL_HKTEX_README.md
+ A docs/RESEARCH_CLEANUP.md
+AD docs/RESEARCH_LAYOUT.md
+ A docs/research_cleanup/abandoned_renderers_plan.json
+ A docs/research_cleanup/plan.json
+ A docs/research_cleanup/storage_inventory.json
+ A docs/research_cleanup/validation.json
+ A docs/research_cleanup/visualization_plan.json
+ A docs/three_backends_cleanup/RETAINED_DEPENDENCIES.md
+AD experiments/converse_fidelity/README.md
+A  experiments/converse_fidelity/cameras.json
+AD experiments/converse_fidelity/common.py
+AD experiments/converse_fidelity/evaluate_metrics.py
+AD experiments/converse_fidelity/render_hktex_baseline.py
+AD experiments/converse_fidelity/render_original_mesh.py
+A  experiments/converse_fidelity/rois.json
+AD experiments/converse_heat_kernel_splatting/AUDIT.md
+AD experiments/converse_heat_kernel_splatting/KERNEL_CENTRIC.md
+AD experiments/converse_heat_kernel_splatting/PERFORMANCE_AUDIT.md
+AD experiments/converse_heat_kernel_splatting/README.md
+AD experiments/converse_heat_kernel_splatting/RUN_500.md
+AD experiments/converse_heat_kernel_splatting/audit_checkpoint.py
+AD experiments/converse_heat_kernel_splatting/benchmark_500.py
+AD experiments/converse_heat_kernel_splatting/benchmark_kernel_centric.py
+AD experiments/converse_heat_kernel_splatting/benchmarks/README.md
+AD experiments/converse_heat_kernel_splatting/benchmarks/forward.py
+AD experiments/converse_heat_kernel_splatting/benchmarks/preprocessing.py
+AD experiments/converse_heat_kernel_splatting/consolidation/audit_saved.py
+A  experiments/converse_heat_kernel_splatting/consolidation/dependencies.json
+A  experiments/converse_heat_kernel_splatting/consolidation/inventory.json
+AD experiments/converse_heat_kernel_splatting/consolidation/restore.py
+AD experiments/converse_heat_kernel_splatting/consolidation/verify.py
+AD experiments/converse_heat_kernel_splatting/cpu_native.py
+AD experiments/converse_heat_kernel_splatting/docs/REFERENCE_PROTOTYPE_README.md
+AD experiments/converse_heat_kernel_splatting/experiment_io.py
+AD experiments/converse_heat_kernel_splatting/fast_raster.py
+AD experiments/converse_heat_kernel_splatting/forward_splatting/MATHEMATICS.md
+AD experiments/converse_heat_kernel_splatting/forward_splatting/README.md
+AD experiments/converse_heat_kernel_splatting/forward_splatting/VALIDATION.md
+AD experiments/converse_heat_kernel_splatting/forward_splatting/__init__.py
+AD experiments/converse_heat_kernel_splatting/forward_splatting/benchmark.py
+AD experiments/converse_heat_kernel_splatting/forward_splatting/core.py
+AD experiments/converse_heat_kernel_splatting/forward_splatting/gpu.py
+AD experiments/converse_heat_kernel_splatting/forward_splatting/renderer.py
+AD experiments/converse_heat_kernel_splatting/forward_splatting/report.py
+AD experiments/converse_heat_kernel_splatting/forward_splatting/test_forward.py
+AD experiments/converse_heat_kernel_splatting/forward_splatting/test_harness.py
+AD experiments/converse_heat_kernel_splatting/forward_splatting/validate_compile.py
+AD experiments/converse_heat_kernel_splatting/forward_splatting/validate_saved_cpu.py
+AD experiments/converse_heat_kernel_splatting/full_report.py
+AD experiments/converse_heat_kernel_splatting/kernel_centric.py
+AD experiments/converse_heat_kernel_splatting/kernel_centric_gpu.py
+AD experiments/converse_heat_kernel_splatting/kernel_centric_raster.py
+AD experiments/converse_heat_kernel_splatting/kernel_centric_report.py
+AD experiments/converse_heat_kernel_splatting/optimized_kernel_splat.py
+AD experiments/converse_heat_kernel_splatting/preprocessing/README.md
+AD experiments/converse_heat_kernel_splatting/preprocessing/__init__.py
+AD experiments/converse_heat_kernel_splatting/preprocessing/audit_saved.py
+AD experiments/converse_heat_kernel_splatting/preprocessing/batched.py
+AD experiments/converse_heat_kernel_splatting/preprocessing/benchmark.py
+AD experiments/converse_heat_kernel_splatting/preprocessing/lightweight.py
+AD experiments/converse_heat_kernel_splatting/preprocessing/profiling.py
+AD experiments/converse_heat_kernel_splatting/preprocessing/report.py
+AD experiments/converse_heat_kernel_splatting/preprocessing/test_preprocessing.py
+AD experiments/converse_heat_kernel_splatting/rebuild_report.py
+AD experiments/converse_heat_kernel_splatting/recovery/MEASURED_RESULTS.md
+AD experiments/converse_heat_kernel_splatting/recovery/README.md
+AD experiments/converse_heat_kernel_splatting/recovery/__init__.py
+AD experiments/converse_heat_kernel_splatting/recovery/fixed_benchmark.py
+AD experiments/converse_heat_kernel_splatting/recovery/recover.py
+AD experiments/converse_heat_kernel_splatting/recovery/test_recovery.py
+AD experiments/converse_heat_kernel_splatting/surface_kernel_splat.py
+AD experiments/converse_heat_kernel_splatting/test_kernel_centric.py
+AD experiments/converse_heat_kernel_splatting/test_optimized.py
+AD experiments/converse_heat_kernel_splatting/test_reference.py
+AD experiments/converse_heat_kernel_splatting/tests/README.md
+AD experiments/converse_heat_kernel_splatting/tests/preserved_suite.py
+AD experiments/converse_heat_kernel_splatting/tests/run_cpu.py
+AD experiments/converse_heat_kernel_splatting/tests/test_consolidation.py
+AD experiments/converse_heat_kernel_splatting/validate_gpu.py
+AD experiments/converse_heat_kernel_splatting/validate_optimized_cpu.py
+AD experiments/converse_heat_kernel_splatting/validation_report.py
+AD experiments/converse_renderer_comparison/README.md
+AD experiments/converse_renderer_comparison/adaptive.py
+AD experiments/converse_renderer_comparison/adaptive_report.py
+AD experiments/converse_renderer_comparison/allocation.py
+AD experiments/converse_renderer_comparison/benchmark.py
+AD experiments/converse_renderer_comparison/checkpoint_metadata.py
+AD experiments/converse_renderer_comparison/configs/benchmark_config.json
+AD experiments/converse_renderer_comparison/quality.py
+AD experiments/converse_renderer_comparison/renderers.py
+AD experiments/surface_splatting/README.md
+AD experiments/surface_splatting/optimization/assets.py
+AD experiments/surface_splatting/optimization/benchmark_backends.py
+AD experiments/surface_splatting/optimization/color_atlas.py
+AD experiments/surface_splatting/optimization/live_inference/appearance.py
+AD experiments/surface_splatting/optimization/live_inference/benchmark.py
+AD experiments/surface_splatting/optimization/live_inference/consistent_knn.py
+AD experiments/surface_splatting/optimization/live_inference/coverage.py
+AD experiments/surface_splatting/optimization/live_inference/geometry.py
+AD experiments/surface_splatting/optimization/live_inference/runtime.py
+AD experiments/surface_splatting/optimization/resident_backend.py
+AD experiments/surface_splatting/optimization/results/gpu_benchmark_/20261020T015737_846857Z/case_0/fresh_gpu/runtime_cache/triton/L2UUZSXBNKUGG3DJFPM5GFSVTGAPY2ZY26KVVVPZ7JD3P4F7SSFQ/triton_poi_fused_div_exp_mul_neg_0.ttgir
+AD experiments/surface_splatting/optimization/torch_backend.py
+ M hktex/modules/tracer.py
+ A hktex_splatting/README.md
+AD hktex_splatting/modules/optimized_kernel_splat.py
+AD hktex_splatting/modules/surface_kernel_splat.py
+ D hktex_splatting/rendering/frame.py
+AD hktex_splatting/rendering/kernel_centric.py
+AD hktex_splatting/rendering/renderer.py
+AD hktex_splatting/triton/kernel_centric_gpu.py
+AM hktex_splatting/utils/_legacy_paths.py
+ D scripts/benchmark_image_gs/README.md
+ D scripts/benchmark_image_gs/evaluate_image_gs.py
+ D scripts/benchmark_image_gs/for_hktex_comparison.patch
+ D scripts/benchmark_image_gs/image_gs_fitting.py
+ D scripts/compare_triangle_splat_backends.py
+ D scripts/extract_video_frames.py
+ D scripts/find_common_valid_files.py
+ D scripts/gather_benchmark_videos.py
+AD scripts/surface_splatting.py
+ M scripts/test_numba_raster.py
+ D scripts/test_renderers.py
+ D scripts/test_triangle_splat_backends.py
+MD scripts/triangle_splat_renderer.py
+ D scripts/visualise_all_kernels.py
+ D scripts/visualise_bh_weights.py
+ D scripts/visualise_eigenvectors.py
+ D scripts/visualise_hktex_steps.py
+ D scripts/visualise_kernel_split.py
+ D scripts/visualise_local_frames.py
+ D scripts/visualise_single_kernel.py
+ M scripts/visualize_kernel_faces.py
+?? Splatting_script.py
+?? archive/
+?? configs/texture_hktex_knn_converse_alpha30.yaml
+?? configs/texture_hktex_knn_converse_hr_alpha30.yaml
+?? docs/BENCHMARK_PROFILER.md
+?? docs/DIRECT_TILES.md
+?? docs/DIRECT_TILES_VALIDATION_FIX.md
+?? docs/FINAL_CLEANUP_REPORT.md
+?? docs/HEAT_KERNEL_SPLATTING_ARCHITECTURE.md
+?? docs/HKS_FILE_RENAME_REPORT.md
+?? docs/HKS_PIPELINE_ONLY_CLEANUP.md
+?? docs/HKTEX_RESEARCH_TRAINING.md
+?? docs/TEST_CLEANUP_REPORT.md
+?? docs/THREE_BACKENDS_CONSOLIDATION.md
+?? docs/final_cleanup/
+?? docs/hks_file_rename/
+?? docs/hks_pipeline_only/
+?? docs/test_cleanup/
+?? docs/three_backends_cleanup/INVENTORY.md
+?? docs/three_backends_cleanup/PROPOSED_REMOVALS.md
+?? docs/three_backends_cleanup/REMOVED_SOURCE_FILES.md
+?? docs/three_backends_cleanup/archive_verified.json
+?? docs/three_backends_cleanup/cpu_after/
+?? docs/three_backends_cleanup/cpu_before/
+?? docs/three_backends_cleanup/cpu_before_final/
+?? docs/three_backends_cleanup/final.json
+?? docs/three_backends_cleanup/imports.before.json
+?? docs/three_backends_cleanup/imports.final.json
+?? docs/three_backends_cleanup/plan.json
+?? docs/three_backends_cleanup/preservation.after.json
+?? docs/three_backends_cleanup/protected.latest.json
+?? docs/three_backends_cleanup/recovered_inputs.json
+?? docs/three_backends_cleanup/recovery_tests.after.log
+?? docs/three_backends_cleanup/recovery_tests.final.log
+?? docs/three_backends_cleanup/recovery_tests.log
+?? docs/three_backends_cleanup/removal_gate.json
+?? docs/three_backends_cleanup/removed.json
+?? docs/three_backends_cleanup/results.before.json
+?? docs/three_backends_cleanup/structure.after.json
+?? docs/three_backends_cleanup/validated_source_match.json
+?? experiments/baselines/
+?? experiments/converse_heat_kernel_splatting/DATA_ONLY.md
+?? hktex_splatting/__init__.py
+?? hktex_splatting/__main__.py
+?? hktex_splatting/cli.py
+?? hktex_splatting/knn_heat/
+?? hktex_splatting/modules/__init__.py
+?? hktex_splatting/modules/spectral_heat_coefficients.py
+?? hktex_splatting/modules/spectral_heat_field.py
+?? hktex_splatting/rendering/__init__.py
+?? hktex_splatting/rendering/cameras.py
+?? hktex_splatting/rendering/fast_raster.py
+?? hktex_splatting/rendering/gpu_dispatch.py
+?? hktex_splatting/rendering/heat_kernel_splatting.py
+?? hktex_splatting/rendering/mesh_visibility_raster.py
+?? hktex_splatting/rendering/native_reference.py
+?? hktex_splatting/rendering/prepared_geometry.py
+?? hktex_splatting/rendering/reference_mesh.py
+?? hktex_splatting/rendering/resident.py
+?? hktex_splatting/rendering/splat_autograd.py
+?? hktex_splatting/rendering/triangle_heat_map.py
+?? hktex_splatting/rendering/triangle_splat_reference.py
+?? hktex_splatting/triton/__init__.py
+?? hktex_splatting/triton/heat_kernel_backward.py
+?? hktex_splatting/triton/heat_kernel_splatting.py
+?? hktex_splatting/triton/resident_gpu.py
+?? hktex_splatting/triton/runtime_splat_kernels.py
+?? hktex_splatting/triton/spectral_heat_coefficients.py
+?? hktex_splatting/triton/triangle_splat_forward.py
+?? hktex_splatting/utils/__init__.py
+?? hktex_splatting/utils/compiler_runtime.py
+?? hktex_splatting/utils/experiment_io.py
+?? hktex_splatting/utils/metrics.py
+?? hktex_splatting/utils/paths.py
+?? hktex_splatting/utils/reference_assets.py
+?? hktex_splatting/utils/support_debug.py
+?? hktex_splatting/utils/training_profile.py
+?? pyproject.toml
+?? scripts/inspect_converse.py
+?? scripts/setup_converse_experiment.py
+?? splatting_script/

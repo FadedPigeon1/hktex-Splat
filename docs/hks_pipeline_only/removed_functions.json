@@ -1,0 +1,234 @@
+[
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "function": "parser"
+  },
+  {
+    "path": "hktex_splatting/trainers/forward.py",
+    "function": "main"
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "function": "PreparedCoefficientTopology.__init__"
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "function": "PreparedCoefficientTopology.dispatch_order"
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "function": "PreparedCoefficientTopology.device"
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "function": "PreparedCoefficientTopology.cpu_bytes"
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "function": "PreparedCoefficientTopology.device_bytes"
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "function": "PreparedCoefficientTopology.matches"
+  },
+  {
+    "path": "hktex_splatting/modules/coefficient_topology.py",
+    "function": "PreparedCoefficientTopology.matches_scene"
+  },
+  {
+    "path": "hktex_splatting/modules/spectral_heat_field.py",
+    "function": "LiveHeatField.prepare_topology"
+  },
+  {
+    "path": "hktex_splatting/modules/spectral_heat_field.py",
+    "function": "LiveHeatField.render"
+  },
+  {
+    "path": "hktex_splatting/utils/training_profile.py",
+    "function": "children_cpu_seconds"
+  },
+  {
+    "path": "hktex_splatting/utils/training_profile.py",
+    "function": "timed_phase"
+  },
+  {
+    "path": "hktex_splatting/utils/compiler_runtime.py",
+    "function": "source_paths"
+  },
+  {
+    "path": "hktex_splatting/utils/compiler_runtime.py",
+    "function": "compiler_environment"
+  },
+  {
+    "path": "hktex_splatting/utils/compiler_runtime.py",
+    "function": "configure_compiler_cache"
+  },
+  {
+    "path": "hktex_splatting/utils/compiler_runtime.py",
+    "function": "runtime_record"
+  },
+  {
+    "path": "hktex_splatting/knn_heat/packed_support.py",
+    "function": "PreparedSupport.select"
+  },
+  {
+    "path": "hktex_splatting/rendering/splat_autograd.py",
+    "function": "PreparedScene.build"
+  },
+  {
+    "path": "hktex_splatting/rendering/splat_autograd.py",
+    "function": "reference"
+  },
+  {
+    "path": "hktex_splatting/rendering/gpu_dispatch.py",
+    "function": "StepCoefficientTopology.__init__"
+  },
+  {
+    "path": "hktex_splatting/rendering/gpu_dispatch.py",
+    "function": "StepCoefficientTopology.device_bytes"
+  },
+  {
+    "path": "hktex_splatting/rendering/gpu_dispatch.py",
+    "function": "StepCoefficientTopology.matches"
+  },
+  {
+    "path": "hktex_splatting/rendering/gpu_dispatch.py",
+    "function": "build_scene"
+  },
+  {
+    "path": "hktex_splatting/rendering/frame.py",
+    "function": "StageTimer.__init__"
+  },
+  {
+    "path": "hktex_splatting/rendering/frame.py",
+    "function": "StageTimer.stage"
+  },
+  {
+    "path": "hktex_splatting/rendering/prepared_geometry.py",
+    "function": "PreparedGeometry.matches"
+  },
+  {
+    "path": "hktex_splatting/rendering/prepared_geometry.py",
+    "function": "PreparedGeometry.dispatch"
+  },
+  {
+    "path": "hktex_splatting/rendering/prepared_geometry.py",
+    "function": "PreparedGeometry.active_pixels"
+  },
+  {
+    "path": "hktex_splatting/rendering/dynamic_dispatch.py",
+    "function": "stable_kernel_face_order"
+  },
+  {
+    "path": "hktex_splatting/rendering/dynamic_dispatch.py",
+    "function": "compact_tasks"
+  },
+  {
+    "path": "hktex_splatting/rendering/footprint.py",
+    "function": "projected_bounds"
+  },
+  {
+    "path": "hktex_splatting/rendering/footprint.py",
+    "function": "prune_dispatch"
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "function": "TileBins.device_bytes"
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "function": "bin_footprints"
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "function": "nearest_sources"
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "function": "kernel_footprints"
+  },
+  {
+    "path": "hktex_splatting/rendering/heat_kernel_splatting.py",
+    "function": "DirectTileRenderer._native"
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_renderer.py",
+    "function": "ForwardRenderer.__init__"
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_renderer.py",
+    "function": "ForwardRenderer._tensor"
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_renderer.py",
+    "function": "ForwardRenderer.shade"
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_renderer.py",
+    "function": "ForwardRenderer.frame"
+  },
+  {
+    "path": "hktex_splatting/rendering/resident.py",
+    "function": "WorkBins.device_bytes"
+  },
+  {
+    "path": "hktex_splatting/rendering/resident.py",
+    "function": "bin_tasks"
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_reference.py",
+    "function": "weights"
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_splat_reference.py",
+    "function": "render_numpy"
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_heat_map.py",
+    "function": "face_candidates"
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_heat_map.py",
+    "function": "polynomial_distance"
+  },
+  {
+    "path": "hktex_splatting/rendering/triangle_heat_map.py",
+    "function": "shade_numpy"
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "function": "identify_ranges"
+  },
+  {
+    "path": "hktex_splatting/triton/resident_gpu.py",
+    "function": "render_ranges"
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "function": "_sort_pairs"
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "function": "_nearest"
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "function": "nearest"
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "function": "_compact"
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "function": "compact_work"
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "function": "_splat_heat"
+  },
+  {
+    "path": "hktex_splatting/triton/heat_kernel_splatting.py",
+    "function": "splat_responses"
+  }
+]

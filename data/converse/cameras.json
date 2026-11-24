@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "coordinates": "HKTex load_mesh: composed GLB scene transforms, subtract surface centroid, scale longest extent to 2",
+  "projection": "perspective",
+  "near_clip_rule": "Existing rasterizer: max(max(norm(ptp(vertices, axis=0)), 1e-12) * 1e-7, 1e-12); no far clipping plane",
+  "resolution_presets": {"preview": [512, 512], "final": [1024, 1024]},
+  "basis": "Existing perspective_camera_basis: right=cross(forward,up_hint), up=cross(right,forward); up_hint Y except abs(dot(forward,Y))>0.99 then Z",
+  "pixel_sampling": "one pixel-center surface sample; no antialiasing, lighting, denoising, sharpening or extra gamma",
+  "branding_location_evidence": {
+    "method": "Visually inspected original texture atlas and side previews, mapped 30 closest UV face centroids around atlas pixel (940,455) in 1400x1400 overview to normalized GLB geometry",
+    "logo_center_approximate": [0.430052, 0.280893, 0.338638],
+    "visible_side": "positive Z"
+  },
+  "views": {
+    "top": {
+      "position": [0, 3, 0], "target": [0, 0, 0], "fov_y_degrees": 45,
+      "purpose": "Reproduce successful existing top-view camera"
+    },
+    "side": {
+      "position": [0, 0.3, 3], "target": [-0.12, 0.12, 0], "fov_y_degrees": 45,
+      "purpose": "Logo-bearing side, full silhouette"
+    },
+    "three_quarter": {
+      "position": [-2, 1.6, 2.8], "target": [-0.12, 0.12, 0], "fov_y_degrees": 45,
+      "purpose": "Toe, laces, fabric, stitching and logo-bearing side"
+    },
+    "logo_closeup": {
+      "position": [0.43, 0.28, 1.5], "target": [0.43, 0.28, 0.338638], "fov_y_degrees": 30,
+      "purpose": "Circular Converse patch, lettering and surrounding fabric/stitching; intentionally cropped silhouette"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "documents": [
+    "README.md",
+    "hktex_splatting/README.md",
+    "splatting_script/README.md",
+    "docs/HEAT_KERNEL_SPLATTING_ARCHITECTURE.md",
+    "docs/BENCHMARK_PROFILER.md",
+    "docs/HKTEX_RESEARCH_TRAINING.md",
+    "docs/HKS_PIPELINE_ONLY_CLEANUP.md",
+    "docs/hks_pipeline_only/PLAN.md"
+  ],
+  "local_links_checked": 64,
+  "broken_links": [],
+  "obsolete_recommended_commands": [],
+  "historical_record_policy": "Earlier cleanup/rename/technical records retain original identities and commands; current README explicitly labels them historical. Raw records are unchanged."
+}

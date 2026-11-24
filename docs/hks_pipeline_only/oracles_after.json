@@ -1,0 +1,11 @@
+{
+  "phase": "after",
+  "arrays": 16,
+  "exact_before_after": true,
+  "cpu_interpreter": true,
+  "modes": [
+    "full_spectrum_eager_oracle",
+    "internal_resident_baseline"
+  ],
+  "gpu_executed": false
+}

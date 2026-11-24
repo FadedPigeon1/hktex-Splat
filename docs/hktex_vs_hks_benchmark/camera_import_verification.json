@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "helpers_ast_identical": 6,
+  "old_new_raster_cases_bitwise_equal": 32,
+  "reference_backends_checked": true,
+  "bvh_static_visibility_checked": true,
+  "torch_imported": false,
+  "gpu_jobs_run": false,
+  "deleted_scripts_not_restored": true,
+  "modified_files": [
+    "hktex_splatting/rendering/fast_raster.py",
+    "hktex_splatting/rendering/mesh_visibility_raster.py",
+    "hktex_splatting/utils/reference_assets.py",
+    "README.md"
+  ],
+  "new_files": [
+    "hktex_splatting/rendering/camera_raster.py",
+    "docs/CAMERA_RASTER_IMPORT_FIX.md",
+    "docs/hktex_vs_hks_benchmark/camera_import_verification.json"
+  ],
+  "optimized_raster_and_bvh_asts_unchanged": true,
+  "all_hks_syntax": true,
+  "git_index_unchanged": true,
+  "earlier_replay_failure_unresolved": true,
+  "source_sha256": {
+    "hktex_splatting/rendering/fast_raster.py": "979ead9eee3e565dd4dde52a7440b977668383bd777cb8922642417dd95d560e",
+    "hktex_splatting/rendering/mesh_visibility_raster.py": "64cc5cca007220e7d1b50a2b5dda389c94526313c39957a386382aa761451abe",
+    "hktex_splatting/utils/reference_assets.py": "e380740d26c1efbfbb36384288ef3cd8b45ceda36b10234e662d0780b3597414",
+    "README.md": "d4ff1f6a971b6a57ca148a8a0e0e5332dff5766b9f0cd6ef042836e39aa6a8c5",
+    "hktex_splatting/rendering/camera_raster.py": "034c335252a4ed42f7e4e4d9996cd5bff3d35cbcde6f805e1e19f640c6fa0c54"
+  }
+}

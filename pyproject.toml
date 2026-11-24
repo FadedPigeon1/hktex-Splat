@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hktex-splatting-research"
+version = "0.1.0"
+description = "Intrinsic differentiable Heat-Kernel Splatting research components"
+requires-python = ">=3.10"
+dependencies = [
+  "torch==2.10.0",
+  "triton>=3.6,<3.7; sys_platform == 'linux'",
+  "numpy>=1.24,<2.3",
+  "numba==0.61.2",
+  "scipy>=1.10",
+  "Pillow>=10",
+  "trimesh>=4",
+  "matplotlib>=3.7",
+  "omegaconf==2.3.0",
+  "PyYAML>=6",
+]
+
+[project.optional-dependencies]
+gpu-raster = [
+  "ninja>=1.11",
+  "nvdiffrast @ git+https://github.com/NVlabs/nvdiffrast.git",
+]
+native = [
+  "digeo==0.0.4",
+  "mitsuba==3.7.1",
+  "torchvision==0.25.0",
+  "torchmetrics==1.8.2",
+  "jaxtyping>=0.3",
+  "potpourri3d>=1.3",
+  "libigl>=2.6",
+  "robust-laplacian>=1.0",
+  "point-cloud-utils>=0.34",
+  "rtree>=1.4",
+  "imageio[ffmpeg]>=2.37",
+  "termcolor>=3",
+  "tqdm>=4.67",
+  "IPython>=8",
+  "objaverse>=0.1.7",
+]
+
+[project.scripts]
+hktex-splatting-train = "hktex_splatting.cli:main"
+hktex-splatting-compare = "splatting_script.experiments.compare_backends:main"
+hktex-splatting-prepare = "hktex_splatting.prepare_assets:main"
+hktex-splatting-surface-train = "splatting_script.experiments.train_surface:main"
+
+[tool.setuptools]
+py-modules = ["interactive_density_knn", "optimisation"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["hktex", "hktex.*", "hktex_splatting*", "splatting_script*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+splatting_script = ["configs/*.yaml", "configs/*.json"]

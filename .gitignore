@@ -1,6 +1,26 @@
 *.ipynb
+# Research inputs and experiment outputs are kept outside source commits.
+/experiments/
+/archive/
+*.glb
+*.gltf
+*.obj
+*.ply
+*.stl
+*.off
+*.fbx
+*.blend
 __pycache__
+*.py[cod]
 .vscode
+
+# Local environments, editable-install metadata and build artifacts.
+.venv/
+venv/
+*.egg-info/
+/build/
+/dist/
+/.cache/
 
 *.pickle
 configs/tmp_*.yaml
@@ -10,3 +30,46 @@ test.sh
 src/
 timing_*.txt
 tune_*.txt
+
+# Converse mesh, textures and spectral archives stay local.
+# Track the asset guide and directory placeholders.
+/data/converse/*
+!/data/converse/README.md
+!/data/converse/cameras.json
+!/data/converse/raw/
+/data/converse/raw/**
+!/data/converse/raw/.gitkeep
+!/data/converse/prepared/
+/data/converse/prepared/**
+!/data/converse/prepared/.gitkeep
+!/data/converse/prepared/textures/
+!/data/converse/prepared/textures/.gitkeep
+
+# Piggy input copies and spectral archives stay local; camera JSON stays visible.
+/data/piggy/prepared/**
+
+# Additional local input meshes and generated spectral assets; keep camera JSON.
+/data/*.glb
+/data/teapot/prepared/**
+/data/basketball/prepared/**
+
+# Generated benchmark/training artifacts and runtime caches stay local.
+/experiments/**/results/**
+!/experiments/**/results/.gitkeep
+/experiments/**/runtime_cache/**
+/experiments/**/__pycache__/
+
+# Default compact comparison reports and the documented full-artifact directory.
+/experiments/comparison*.md
+/experiments/comparison_artifacts/
+# Source, configurations, recorded cameras and documentation remain visible.
+
+# Verified recovery payloads stay local; manifests and recovery instructions remain visible.
+/archive/three_backends/*/*.tar.gz
+
+# Additional experiment inputs and original-solver spectral archives stay local.
+/data/bowl/prepared/**
+/data/light_saber/prepared/**
+/data/light_saber_small/prepared/**
+/data/punga_chips/prepared/**
+/data/skull/prepared/**

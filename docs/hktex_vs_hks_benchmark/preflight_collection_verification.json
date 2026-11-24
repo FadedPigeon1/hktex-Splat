@@ -1,0 +1,12 @@
+{
+  "status": "native_variability_unresolved",
+  "cpu_checks_passed": 7,
+  "tolerances_changed": false,
+  "production_math_changed": false,
+  "gpu_jobs_run": false,
+  "change": "Defer failed scalar consistency exception until replay tensors have been captured; failed checks still block all measured training.",
+  "native_reference_loss": 0.09785506129264832,
+  "native_step_loss": 0.09785808622837067,
+  "hybrid_preflight_passed": true,
+  "source_sha256": "c4a4e003f0a3a356a5b6be11c0342772e599a9c59b045b643bf6fde037bf3763"
+}

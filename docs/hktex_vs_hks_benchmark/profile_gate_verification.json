@@ -1,0 +1,89 @@
+{
+  "passed": true,
+  "modified_files": [
+    "splatting_script/benchmarks/pipeline_profile.py",
+    "splatting_script/benchmarks/renderer_comparison.py",
+    "splatting_script/benchmarks/pipeline_report.py",
+    "docs/HKTEX_VS_HKS_BENCHMARK.md",
+    "docs/BENCHMARK_PROFILER.md"
+  ],
+  "new_files": [
+    "docs/PROFILE_VALIDATION_FIX.md",
+    "docs/hktex_vs_hks_benchmark/profile_gate_verification.json"
+  ],
+  "deleted_files": [],
+  "checks": {
+    "cpu_checks.json": {
+      "passed": true,
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "scope": "Actual Torch CPU profiler and saved-tensor hooks, synthetic Linear RGB; not real GPU renderer validation"
+    },
+    "report_check.json": {
+      "passed": true,
+      "failed_gate_serialized": true,
+      "failed_gate_displayed": true,
+      "cuda_initialized": false
+    },
+    "static_checks.json": {
+      "passed": true,
+      "checks": {
+        "git_index_unchanged": true,
+        "original_hktex_and_hks_sources_byte_identical": true,
+        "existing_smoke_results_byte_identical": true,
+        "all_hks_python_syntax": true,
+        "both_profile_previews": true,
+        "previews_no_torch_import": true,
+        "modified_document_links": true
+      }
+    }
+  },
+  "diagnostic_change": "Profile validation now uses the actual foreground target/mask loss rather than the legacy unnormalized RGB-squared-sum; production math is unchanged.",
+  "cuda_tolerances": {
+    "atol": 3e-05,
+    "rtol": 0.0003
+  },
+  "cpu_tolerances": {
+    "atol": 0,
+    "rtol": 0
+  },
+  "existing_gpu_evidence": {
+    "workflow": "experiments/converse_heat_kernel_splatting/results/hktex_vs_hks_smoke/workflow.json",
+    "paired_preflight": "complete",
+    "native_speed": "complete: 4 updates",
+    "hybrid_speed": "complete: 4 updates",
+    "native_profile": "failed: parameter VJP comparison",
+    "hybrid_profile": "failed: parameter VJP comparison",
+    "native_gradient_mismatches": 5,
+    "hybrid_gradient_mismatches": 4,
+    "gradient_elements": 3000
+  },
+  "gpu_rerun_executed": false,
+  "allocation": {
+    "SLURM_JOB_ID": null,
+    "CUDA_VISIBLE_DEVICES": null
+  },
+  "preservation": {
+    "original_hktex_and_hks_sources_byte_identical": true,
+    "render_and_training_step_asts_identical": true,
+    "existing_deep_renderer_gate_unchanged": true,
+    "existing_smoke_artifacts_byte_identical": true,
+    "git_index_unchanged": true,
+    "no_commit_or_push": true
+  },
+  "test_note": "All temporary helpers stayed under /tmp. An initial fixture run hit a Torch lazy-import error for two Adam checks; preloading NumPy/torch._numpy in the temporary fixture resolved it. No installed package or production source was patched for that workaround.",
+  "limitations": [
+    "No GPU gate rerun was executed by the agent. The source of the old VJP mismatch is not proven from its logs.",
+    "Actual-loss checking changes the diagnostic objective; it does not establish repeatability for the old unnormalized sum probe.",
+    "New source hashes require a fresh matched workflow; old speed runs must not be represented as matching new profiles."
+  ],
+  "source_sha256": {
+    "splatting_script/benchmarks/pipeline_profile.py": "d92a2b072ad54a8212256b7ffc2affca7e57e423c17baa24e2a572c93347cbfc",
+    "splatting_script/benchmarks/renderer_comparison.py": "9498239463cd0eafd22044e58fa68de776478c4b6d337504b9bba107e61a2d01",
+    "splatting_script/benchmarks/pipeline_report.py": "f7268002920acf5315d787c846c6007edbeb509e3a0406ba85a1c5306f0ff4aa",
+    "docs/HKTEX_VS_HKS_BENCHMARK.md": "e7d768cab1905a684b0cf2078022a0604e5f69e76e3657b2e942e7cccb36b032",
+    "docs/BENCHMARK_PROFILER.md": "b2de2661fdc374d1bf6c4fae1bb94983b206c48e51b556892884211947dc194d",
+    "docs/PROFILE_VALIDATION_FIX.md": "0b9cba1517dbb4956dd011f173813d149d288dfa95a05a95138ca0a35ffa40bc"
+  }
+}

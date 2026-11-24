@@ -1,0 +1,79 @@
+{
+  "passed": true,
+  "modified_files": [
+    "splatting_script/benchmarks/training_research.py",
+    "docs/HKTEX_VS_HKS_BENCHMARK.md",
+    "docs/BENCHMARK_PROFILER.md",
+    "docs/PROFILE_VALIDATION_FIX.md"
+  ],
+  "new_files": [
+    "docs/PREFLIGHT_LOSS_MODE_FIX.md",
+    "docs/hktex_vs_hks_benchmark/preflight_loss_verification.json"
+  ],
+  "deleted_files": [],
+  "cpu_checks": {
+    "passed": true,
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "cuda_initialized": false,
+    "scope": "CPU synthetic execution-mode fixture; original compiled GPU failure not reproduced here"
+  },
+  "checks": {
+    "syntax": true,
+    "original_hktex_and_hks_source_byte_identical": true,
+    "existing_user_smoke_and_large_run_artifacts_byte_identical": true,
+    "git_index_unchanged": true,
+    "run_training_health_and_rng_function_asts_identical": true,
+    "strict_training_loss_tolerance_preserved": true,
+    "existing_replay_guards_preserved": true,
+    "native_preflight_preview": true,
+    "matched_5000_smoke_and_full_workflow_previews": true,
+    "safe_fallback_flags_preserved": true
+  },
+  "user_gpu_evidence": {
+    "smoke_1000_128_profiles": [
+      {
+        "backend": "native",
+        "run": "/scratch/user/franciscotorres2124/research/hktex/experiments/converse_heat_kernel_splatting/results/direct_tiles_native_20261117T021504_907922Z_989928d5fe",
+        "receipt_sha256": "77c16799dd313d66c6dd158e52f734da1fc966b397b0246644a0d228b317beaa",
+        "passed": true,
+        "objective": "foreground_rgb_squared_error_pixel_mean"
+      },
+      {
+        "backend": "hybrid",
+        "run": "/scratch/user/franciscotorres2124/research/hktex/experiments/converse_heat_kernel_splatting/results/direct_tiles_direct_20261117T021846_285586Z_932b9a4275",
+        "receipt_sha256": "9a58b7cc307c5b1f84242f38bcb2733e67cfe06da48d6a1f5e8c988e6e0a8dd1",
+        "passed": true,
+        "objective": "foreground_rgb_squared_error_pixel_mean"
+      }
+    ],
+    "large_5000_256_hybrid_preflight_passed": true,
+    "large_selector": {
+      "fused_chunks": 0,
+      "selector_fallback": "source_width_exceeds_4096",
+      "native_distance_fallback": null,
+      "native_topk_fallback": null,
+      "dispatch": "kernel_triangle_tile_queue"
+    },
+    "native_failure": "Comparison of actual gradient-enabled training loss with a no_grad evaluation loss; log does not record scalar values."
+  },
+  "new_gpu_validation": {
+    "executed_by_agent": false,
+    "allocation": null,
+    "reason": "No allocated A100 session; new gradient-enabled 5000 reference gate requires user rerun."
+  },
+  "limitations": [
+    "CPU fixtures demonstrate the mixed-execution-mode assertion issue, not the exact source or magnitude of the saved GPU discrepancy.",
+    "Inference-versus-training differences are recorded separately; real same-mode training loss and replay failures still fail.",
+    "The new gradient-enabled reference is confined to untimed preflight, with reset/RNG restoration; no production renderer or optimizer changes."
+  ],
+  "source_sha256": {
+    "splatting_script/benchmarks/training_research.py": "ff82fb4d7301cdf7ee631016c44252958e81faeae0eb313b4f44650323f5e27f",
+    "docs/HKTEX_VS_HKS_BENCHMARK.md": "4d35f159d13825d1c25b3d7145497866eb3568cdbcceeefd0c06a4ea3abc7d35",
+    "docs/BENCHMARK_PROFILER.md": "3e5094bd14f6fd14daeb2bce9a0b2ba6b093c5321e5501c7f117139b8bd1eabd",
+    "docs/PROFILE_VALIDATION_FIX.md": "dd5cd6b2eb063cfb6e8b2e872c9dde31dd4b9929928be98ad1944cebc59b8c2a",
+    "docs/PREFLIGHT_LOSS_MODE_FIX.md": "0afb6c55c9a4a17a5501be70935cc26de688533e829f19135f976946b4f7f8dd"
+  },
+  "commit_or_push": false
+}
