@@ -1,7 +1,7 @@
 """Sample the original mesh UV texture at triangle-renderer pixel centers.
 
 Rendering/benchmark target images; no learned kernel evaluation.
-Main API: texture_sample, render, main."""
+Main API: texture_sample, render, shade_material, shade_batch, main."""
 from __future__ import annotations
 
 import time
@@ -21,6 +21,81 @@ from hktex_splatting.utils.reference_assets import (
     stats,
     write_json,
 )
+
+
+def shade_material(albedo, normals, view_directions, *, mode='none',
+                   direction=(.3, .8, .6), ambient=.1, intensity=3.,
+                   roughness=.35, specular=.04, backend='auto'):
+    """Shade sRGB albedo into linear RGB radiance, independently of heat kernels.
+
+    A world-space distant light uses Lambert diffuse and optional isotropic GGX,
+    separable Smith masking and Schlick Fresnel. Ambient is a diffuse fill, not
+    traced indirect light. Roughness/F0 are fixed material controls, not learned.
+    CUDA auto uses a first-order albedo kernel for contiguous fixed geometry;
+    Torch retains the reference graph and geometry/higher-order derivatives.
+    No shadows, tone mapping or display clipping; ``none`` is an exact identity.
+    Directions point from surface to light/viewer. Normals are outward, one-sided.
+    """
+    if mode == 'none':
+        return albedo
+    import math
+    import torch
+    import torch.nn.functional as F
+    if mode not in ('diffuse', 'ggx'):
+        raise ValueError('Unknown lighting mode')
+    if (not all(math.isfinite(x) for x in (*direction, ambient, intensity, roughness, specular))
+            or len(direction) != 3 or sum(x*x for x in direction) <= 0
+            or ambient < 0 or intensity < 0 or not .05 <= roughness <= 1
+            or not 0 <= specular <= 1):
+        raise ValueError('Invalid light or material settings')
+    if albedo.ndim != 2 or albedo.shape[-1] != 3:
+        raise ValueError('Expected [visible samples, 3] albedo')
+    if normals.shape != albedo.shape or view_directions.shape != albedo.shape:
+        raise ValueError('Lighting geometry must match albedo samples')
+    if backend not in ('auto', 'torch', 'triton'):
+        raise ValueError('Unknown material-lighting backend')
+    normals, view_directions = normals.to(albedo), view_directions.to(albedo)
+    fused = (albedo.is_cuda and albedo.dtype == torch.float32 and
+             not normals.requires_grad and not view_directions.requires_grad and
+             normals.is_contiguous() and view_directions.is_contiguous())
+    if backend == 'triton' and not fused:
+        raise ValueError('Fused lighting requires CUDA float32 albedo and contiguous fixed normal/view inputs')
+    if fused and backend != 'torch':
+        from hktex_splatting.rendering.splat_autograd import material_lighting
+        return material_lighting(albedo, normals, view_directions, mode, direction,
+                                 ambient, intensity, roughness, specular)
+    n = F.normalize(normals.to(albedo), dim=-1, eps=1e-6)
+    v = F.normalize(view_directions.to(albedo), dim=-1, eps=1e-6)
+    l = F.normalize(albedo.new_tensor(direction), dim=-1, eps=1e-6)
+    nl = (n*l).sum(-1, keepdim=True).clamp(0, 1)
+    nv = (n*v).sum(-1, keepdim=True).clamp(0, 1)
+    # Both branches stay finite even for the inactive low-sRGB branch.
+    linear = torch.where(albedo <= .04045, albedo/12.92,
+                         ((albedo+.055).clamp_min(0)/1.055).pow(2.4))
+    diffuse = linear/math.pi
+    highlight = 0.
+    if mode == 'ggx':
+        h = F.normalize(l+v, dim=-1, eps=1e-6)
+        nh = (n*h).sum(-1, keepdim=True).clamp(0, 1)
+        vh = (v*h).sum(-1, keepdim=True).clamp(0, 1)
+        alpha2 = roughness**4  # perceptual roughness -> alpha = roughness squared
+        distribution = alpha2/(math.pi*(nh.square()*(alpha2-1)+1).square())
+        def masking(cosine):
+            return 2*cosine/(cosine+(alpha2+(1-alpha2)*cosine.square()).sqrt())
+        fresnel = specular+(1-specular)*(1-vh).pow(5)
+        highlight = distribution*masking(nl)*masking(nv)*fresnel/(4*nv.clamp_min(1e-6))
+        diffuse = diffuse*(1-fresnel)
+    direct = diffuse*nl+highlight
+    return ambient*linear+intensity*torch.where((nl > 0)&(nv > 0), direct, 0.)
+
+
+def shade_batch(albedo, data, settings, *, backend=None):
+    """Apply optional shared camera lighting after material RGB reconstruction."""
+    if not settings or settings.get('mode', 'none') == 'none':
+        return albedo
+    if backend is not None:
+        settings = dict(settings, backend=backend)
+    return shade_material(albedo, data['lighting_normal'], data['lighting_view'], **settings)
 
 
 def texture_sample(mesh, ids, barys, filtering="nearest"):

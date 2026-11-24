@@ -8,17 +8,20 @@ from bisect import bisect_right
 
 
 STAGES = {
+    'update':'both', 'zero_grad':'both', 'backward.loss':'both',
     'forward': 'both', 'loss':'both', 'backward':'both', 'optimizer':'both',
     'optimizer.geodesic':'both', 'optimizer.geodesic_trace':'both',
     'optimizer.other':'both', 'optimizer.scheduler_and_clamp':'both',
     'native.source_state':'native', 'native.faiss_build':'native', 'native.knn_search':'native',
     'native.distances':'native', 'native.spectral_gather':'native', 'native.spectral_heat':'native',
     'native.query_preparation':'native', 'native.distance_weighting':'native',
+    'native.source_heat':'native', 'native.shading':'native', 'native.output':'native',
     'backward.native_spectral':'native', 'backward.native_filter':'native',
     'backward.native_rgb':'native', 'backward.native_distance':'native',
     'native.filter':'native', 'native.top30':'native', 'native.rgb':'native',
     'hybrid.source_state':'hybrid', 'source.grid_selection':'both', 'source.spectral_gather':'both',
     'visibility.rasterization':'both', 'visibility.reuse':'both',
+    'visibility.rasterization_and_preparation':'both', 'visibility.tile_geometry':'hybrid',
     'support.triangle_embedding_setup':'hybrid', 'support.distances':'hybrid',
     'support.legacy_candidates':'hybrid', 'support.selector_dispatch':'hybrid',
     'support.threshold':'hybrid', 'support.topk':'hybrid', 'support.fused_selection':'hybrid',
@@ -28,6 +31,8 @@ STAGES = {
     'spectral.coefficient_forward':'hybrid', 'spectral.coefficient_backward':'hybrid',
     'hybrid.queue':'hybrid', 'hybrid.queue_grouping':'hybrid', 'hybrid.emission':'hybrid',
     'hybrid.top30':'hybrid', 'hybrid.rgb':'hybrid', 'backward.rgb':'hybrid', 'backward.weights':'hybrid',
+    'hybrid.corner_coefficients':'hybrid', 'hybrid.coefficient_topology':'hybrid',
+    'hybrid.splat':'hybrid', 'backward.source_state':'hybrid',
 }
 
 
@@ -107,15 +112,19 @@ def analyze_trace(events, observed):
             names,leaf=classify(labels,operators)
             args=e.get('args',{})
             sequence=args.get('Sequence number')
-            if sequence is not None and 'forward' in names and leaf:
+            if sequence is not None and ('forward' in names or 'loss' in names) and leaf:
                 forward_sequences[(e.get('pid'),e.get('tid'),sequence)]=leaf
             if leaf=='backward' and sequence is not None:
                 origin=forward_sequences.get((e.get('pid'),args.get('Fwd thread id',e.get('tid')),sequence))
                 kind=('spectral' if origin and (origin.startswith('source.') or 'spectral' in origin or origin=='native.source_state') else
-                      'filter' if origin=='native.filter' else 'rgb' if origin in ('native.rgb','native.top30') else
+                      'filter' if origin=='native.filter' else 'rgb' if origin in ('native.rgb','native.top30','native.output') else
                       'distance' if origin in ('native.distances','native.distance_weighting') else None)
-                if kind and backend=='native': leaf='backward.native_'+kind;names.append(leaf)
-            if leaf=='backward' and stack and (stack[-1]['leaf'] or '').startswith('backward.native_'):
+                if origin=='loss': leaf='backward.loss'
+                elif kind and backend=='native': leaf='backward.native_'+kind
+                elif backend=='hybrid' and origin and (origin.startswith('source.') or origin=='hybrid.source_state'):
+                    leaf='backward.source_state'
+                if leaf!='backward': names.append(leaf)
+            if leaf=='backward' and stack and (stack[-1]['leaf'] or '').startswith('backward.'):
                 leaf=stack[-1]['leaf'];names.append(leaf)
             update=stack[-1]['update'] if stack else None
             if e['name']=='bench::update':
@@ -197,7 +206,8 @@ def analyze_trace(events, observed):
         for stage in update['stages']:
             per_stage.setdefault(stage['name'],[]).append(stage)
         for name,rows in per_stage.items():
-            dst=sampled.setdefault(name,dict(host=[],process=[],cuda=[]))
+            dst=sampled.setdefault(name,dict(host=[],process=[],cuda=[],calls=[]))
+            dst['calls'].append(len(rows))
             dst['host'].append(sum(r['host_wall_ms'] for r in rows))
             dst['process'].append(sum(r['process_cpu_ms'] for r in rows))
             values=[r['cuda_event_interval_ms'] for r in rows if r['cuda_event_interval_ms'] is not None]
@@ -212,12 +222,17 @@ def analyze_trace(events, observed):
         own_cpu=duration(cpu_self.get(name,[]))/1000
         leaf_gpu=gpu_stats(exclusive.get(name,[]))
         stages[name]=dict(status='measured' if present else 'N/A',
+            backend=STAGES.get(name,'both'),
             reason=None if present else ('Stage absent in this backend' if not applicable else 'Not executed in the sampled window; cached setup or unavailable instrumentation'),
-            host_wall_ms=distribution(rows.get('host',[])), process_cpu_ms=distribution(rows.get('process',[])),
-            cuda_event_interval_ms=distribution(rows.get('cuda',[])),
+            host_wall_ms=distribution(rows.get('host',[])+[0]*(iterations-len(rows['host']))) if rows else None,
+            process_cpu_ms=distribution(rows.get('process',[])+[0]*(iterations-len(rows['process']))) if rows else None,
+            cuda_event_interval_ms=distribution(rows['cuda']+[0]*(iterations-len(rows['cuda']))) if rows.get('cuda') else None,
+            calls_per_update=distribution(rows.get('calls',[])+[0]*(iterations-len(rows.get('calls',[])))) if rows else None,
             cpu_self_wall_ms_per_update=own_cpu/iterations if present and iterations else None,
             cpu_self_wall_ms=distribution(duration(v)/1000 for v in cpu_self_updates.get(name,{}).values()),
             inclusive_cuda_activity=gpu_stats(grouped.get(name,[])), exclusive_cuda_activity=leaf_gpu,
+            inclusive_gpu_ms_per_update=(gpu_stats(grouped[name])['kernel_duration_sum_ms']/iterations
+                if name in grouped and iterations else None),
             exclusive_gpu_kernel_ms=distribution(gpu_stats(v)['kernel_duration_sum_ms'] for v in exclusive_updates.get(name,{}).values()),
             inclusive_gpu_activity_union_ms=distribution(gpu_stats(v)['activity_union_ms'] for v in inclusive_updates.get(name,{}).values()),
             exclusive_gpu_ms_per_update=leaf_gpu['kernel_duration_sum_ms']/iterations if leaf_gpu and iterations else None,
@@ -233,6 +248,16 @@ def analyze_trace(events, observed):
     gpu_rank=sorted((dict(stage=n,exclusive_gpu_ms_per_update=v['exclusive_gpu_ms_per_update']) for n,v in stages.items()
         if n not in ('update','forward','backward','optimizer') and v['exclusive_gpu_ms_per_update'] is not None
         and not n.startswith('diagnostic.')),key=lambda r:-r['exclusive_gpu_ms_per_update'])[:5]
+    setup_stages={}
+    for setup in observed.get('setup',[]):
+        for stage in setup.get('stages',[]):
+            row=setup_stages.setdefault(stage['name'],dict(calls=0,host_wall_total_ms=0.,
+                process_cpu_total_ms=0.,cuda_event_interval_total_ms=None))
+            row['calls']+=1
+            row['host_wall_total_ms']+=stage['host_wall_ms']
+            row['process_cpu_total_ms']+=stage['process_cpu_ms']
+            value=stage.get('cuda_event_interval_ms')
+            if value is not None: row['cuda_event_interval_total_ms']=(row['cuda_event_interval_total_ms'] or 0.)+value
     return dict(format='hktex_pipeline_profile_v1', backend=backend, profiled_updates=iterations,
         initial_model_sha256=observed.get('initial_model_sha256'), precision=observed.get('precision'),
         controls=observed.get('controls'), health=observed.get('health'), stages=stages,
@@ -252,6 +277,7 @@ def analyze_trace(events, observed):
                 key=lambda row:-row['largest_allocation_bytes'])[:5],
             scope='Measured storage snapshots and separate largest allocator requests; categories may alias. Not whole-device ownership.'),
         setup=observed.get('setup',[]),
+        setup_stages=setup_stages,
         saved_for_backward=[r.get('saved_for_backward') for r in observed.get('updates',[])],
         work=[dict(iteration=r['iteration'],camera=r['camera'],records=r.get('work',[])) for r in observed.get('updates',[])],
         selector_events=observed.get('selector_events',[]),

@@ -13,7 +13,8 @@ class PreparedSupport:
     The runner binds a plan to each immutable camera visibility array.
     """
     @torch.no_grad()
-    def __init__(self, faces, embedding, face_ids, neighbors, face_chunk=128, profile=False):
+    def __init__(self, faces, embedding, face_ids, neighbors, face_chunk=128, profile=False,
+                 *, execution_batch_faces=0):
         ids=np.asarray(face_ids)
         if ids.ndim!=2 or ids.dtype.kind not in 'iu' or np.any(ids < -1) or np.any(ids>=len(faces)):
             raise ValueError('Invalid support visibility')
@@ -34,6 +35,14 @@ class PreparedSupport:
             center=corners.double().mean(1)
             radius=torch.linalg.vector_norm(corners.double()-center[:,None],dim=-1).amax(1)
             self.chunks.append((begin,center,radius))
+        if execution_batch_faces and execution_batch_faces != 512:
+            raise ValueError('Audited execution batch must be 512 faces')
+        self.execution_chunks = self.chunks
+        if execution_batch_faces and self.chunks:
+            centers, radii = (
+                torch.cat([c for _, c, _ in self.chunks]), torch.cat([r for _, _, r in self.chunks]))
+            self.execution_chunks = [(i, centers[i:i+execution_batch_faces], radii[i:i+execution_batch_faces])
+                                     for i in range(0, len(self.visible), execution_batch_faces)]
         self.calls=0
 
     def matches(self,faces,embedding,face_ids,neighbors,face_chunk=128):

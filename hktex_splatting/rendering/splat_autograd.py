@@ -4,6 +4,7 @@ Shared training forward/backward; visibility and support decisions are fixed per
 Main API: PreparedScene, _Splat, splat."""
 from dataclasses import dataclass
 import torch
+import triton
 from torch.autograd.function import once_differentiable
 
 from hktex_splatting.rendering.triangle_tile_layout import Dispatch
@@ -12,6 +13,43 @@ from hktex_splatting.triton import (
     heat_kernel_backward as backward,
     splat_reconstruction as runtime_kernels,
 )
+
+
+class _MaterialLighting(torch.autograd.Function):
+    """First-order albedo adjoint for fixed-geometry analytic lighting."""
+    @staticmethod
+    def forward(ctx, albedo, normals, view, mode, direction, ambient, intensity, roughness, specular):
+        ctx.set_materialize_grads(False)
+        output = torch.empty_like(albedo)
+        multiplier = albedo.new_empty((len(albedo),) if ctx.needs_input_grad[0] else (0,))
+        if len(albedo):
+            runtime_kernels.material_lighting_forward[(triton.cdiv(len(albedo), 128),)](
+                albedo, normals, view, output, multiplier, len(albedo), *direction,
+                ambient, intensity, roughness**4, specular, mode == 'ggx',
+                ctx.needs_input_grad[0], 128, num_warps=4, enable_fp_fusion=False)
+        if ctx.needs_input_grad[0]:
+            ctx.save_for_backward(albedo, multiplier)
+        return output
+
+    @staticmethod
+    @once_differentiable
+    def backward(ctx, grad):
+        if grad is None:
+            return (None,)*9
+        albedo, multiplier = ctx.saved_tensors
+        result = torch.empty_like(albedo)
+        if len(albedo):
+            runtime_kernels.material_lighting_backward[(triton.cdiv(albedo.numel(), 256),)](
+                albedo, multiplier, grad.contiguous(), result, len(albedo), 256,
+                num_warps=4, enable_fp_fusion=False)
+        return result, None, None, None, None, None, None, None, None
+
+
+def material_lighting(albedo, normals, view, mode, direction, ambient, intensity, roughness, specular):
+    """Fused shader; callers validate CUDA float32/fixed geometry before dispatch."""
+    return _MaterialLighting.apply(albedo.contiguous(), normals.contiguous(), view.contiguous(),
+        mode, tuple(float(x) for x in direction), float(ambient), float(intensity),
+        float(roughness), float(specular))
 
 
 @dataclass

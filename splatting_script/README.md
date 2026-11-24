@@ -14,6 +14,19 @@ The two implementations are `native` (HKTex Original) and `hybrid` (HKTex Splat 
 `original`/`2dgs` remain compatibility aliases for these same implementations.
 Preview is the default.
 
+The separate `experiments.train_surface` command runs the original UV training
+lifecycle with native or HKS surface-sample adapters, preserving configured
+importance sampling and density controllers. See [full surface training](../docs/FULL_SURFACE_TRAINING.md).
+This experimental protocol retains verification checkpoints and is distinct
+from the camera-image comparison documented below.
+
+`train_surface --supervision camera` instead runs adaptive training on rasterized
+camera pixels. The optional [fresh GPU camera pipeline](../docs/GPU_CAMERA_PIPELINE.md)
+uses nvdiffrast and device-resident HKS geometry. `benchmarks.camera_scaling` pairs
+native/HKS at matched resolutions and reports training/worker time with PSNR.
+These full-training protocols retain verification receipts; the single-Markdown
+artifact policy above applies to `benchmarks.compare_training`.
+
 Use the lowercase `splatting_script` package for every module command. The former
 mixed-case command namespace has been removed; older cleanup reports retain its
 historical paths as recovery records.

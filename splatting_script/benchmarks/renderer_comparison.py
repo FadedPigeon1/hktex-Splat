@@ -695,7 +695,8 @@ def _execute(args, process_start, jit, instrumentation=None):
     def profiled_step(mode, name):
         stage = observer.scope
         with stage('update'):
-            for opt in trainer.optimizers: opt.zero_grad(set_to_none=True)
+            with stage('zero_grad'):
+                for opt in trainer.optimizers: opt.zero_grad(set_to_none=True)
             if args.visibility == 'fresh':
                 with annotation('visibility'), stage('visibility.rasterization_and_preparation'): make_geometry(name)
             elif observer is not None:

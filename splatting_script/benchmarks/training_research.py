@@ -100,7 +100,7 @@ def provenance(args, root, initial_hash, cameras, trainer, torch):
     assets = {name:file_identity(root/path) for name, path in dict(
         mesh='data/converse/prepared/converse__free.glb',
         spectral='data/converse/prepared/converse__free_eigen_albo_principal_curvatures.pt',
-        cameras='experiments/converse_fidelity/cameras.json').items()}
+        cameras='data/converse/cameras.json').items()}
     props = torch.cuda.get_device_properties(trainer.mesh.verts.device)
     free, total = torch.cuda.mem_get_info(trainer.mesh.verts.device)
     return dict(format='hktex_research_manifest_v1', git_commit=git('rev-parse', 'HEAD'),

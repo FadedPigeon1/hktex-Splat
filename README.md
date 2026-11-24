@@ -30,6 +30,10 @@ HKTex avoids UV seams, distortion, wasted atlas space, duplicated vertices, and 
 
 ## Installation
 
+For the experimental HKS camera acceleration path and optional nvdiffrast CUDA
+dependency, see [fresh GPU camera training](docs/GPU_CAMERA_PIPELINE.md). Original
+HKTex installation and training remain available below.
+
 The environments below target Python 3.11, Linux, and an NVIDIA GPU with a CUDA 12.9-compatible driver. [Mamba](https://mamba.readthedocs.io/) is recommended for environment management.
 
 ### HKTex

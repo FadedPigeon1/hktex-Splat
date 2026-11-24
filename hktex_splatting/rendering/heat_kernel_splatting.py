@@ -14,6 +14,7 @@ from hktex_splatting.rendering.splat_autograd import _Splat
 
 def scope(enabled, name):
     prefix = 'spectral::' if name in ('source_state', 'spectral_shading', 'triangle_coefficients') else 'support::'
+    if hasattr(enabled, 'stage'): return enabled.stage(prefix+name)
     return torch.profiler.record_function(prefix+'direct_tiles_'+name) if enabled else nullcontext()
 
 
@@ -60,9 +61,13 @@ class TileSurface:
         tile_ids = (flat_pixels//w//tile_size)*self.tiles_x+flat_pixels%w//tile_size
         tile_pixels = np.full((self.tile_count, tile_size**2), -1, np.int32)
         lengths = np.zeros(self.tile_count, np.int32)
-        for ordinal, tile in enumerate(tile_ids):
-            tile_pixels[tile, lengths[tile]] = ordinal
-            lengths[tile] += 1
+        if len(tile_ids):
+            order = np.argsort(tile_ids, kind='stable')
+            ordered = tile_ids[order]
+            first = np.r_[True, ordered[1:] != ordered[:-1]]
+            starts = np.maximum.accumulate(np.where(first, np.arange(len(order)), 0))
+            tile_pixels[ordered, np.arange(len(order))-starts] = order.astype(np.int32)
+            lengths[:] = np.bincount(tile_ids, minlength=self.tile_count)
         self.tile_pixels = torch.as_tensor(tile_pixels, device=embedding.device)
         self.tile_lengths = torch.as_tensor(lengths, device=embedding.device)
         self.active_tile_count = int((lengths > 0).sum())
@@ -110,16 +115,13 @@ def full_spectrum_work(surface, source_count):
     return KernelTileWork(membership, queue, count)
 
 
-def _pixel_coefficients(field, state, surface, pixels, kernels, fused):
-    """Reuse shared spectral coefficient construction, with pixel work inputs.
+def _pixel_coefficients(field, state, surface, pixels, kernels):
+    """Evaluate independent eager coefficients for the full-spectrum oracle.
 
     These are selected kernel/pixel records, not a face support table. No
     unique-face enumeration, face CSR, support selector or triangle dispatch.
     """
     vertices = surface.vertices[pixels]
-    if fused:
-        from hktex_splatting.modules.spectral_heat_coefficients import fused_coefficients
-        return fused_coefficients(vertices, kernels, state, field.eigen)
     return field._chunk(vertices, kernels, state.grid_ids, state.grid_weights, state.decay,
                         state.phi, state.normalizer, state.embedding)
 
@@ -147,7 +149,7 @@ def _torch_splat_responses(field, state, surface, work, batch):
         kernels = (task//t)[:, None].expand_as(pixels)
         valid = pixels >= 0
         p, k = pixels[valid], kernels[valid]
-        h, metric = _pixel_coefficients(field, state, surface, p, k, False)
+        h, metric = _pixel_coefficients(field, state, surface, p, k)
         response[p, k] = _responses_from_coefficients(h, metric, surface.bary[p], field.eigen)
     return response
 
@@ -200,37 +202,44 @@ def triangle_tile_work(support, geometry, surface, backend='torch', patch_tiles=
                         'Duplicate or unordered kernel/triangle support')
     # CSR already has ascending faces. One stable kernel/tile key sort is
     # sufficient; sorting kernels first would add redundant per-step work.
-    order = torch.arange(len(k), device=k.device)
-    faces = f.long()
-    repetitions = geometry.face_counts[faces]
-    prefix = repetitions.cumsum(0)-repetitions
-    entries = torch.repeat_interleave(order, repetitions, output_size=support.tasks)
-    patch = (torch.repeat_interleave(geometry.face_starts[faces]-prefix, repetitions,
-                                    output_size=support.tasks)+torch.arange(support.tasks, device=k.device))
     if patch_tiles is None:
         patch_tiles = torch.as_tensor(np.array(geometry.geometry._layout.patch_tiles, copy=True), device=k.device)
-    tiles = patch_tiles[patch]
-    keys = k[entries].long()*surface.tile_count+tiles
+    # Coarse faces spanning many tiles retain the vectorized reference expansion.
+    # This chooses a scheduling implementation, without capping any support.
+    if backend == 'triton' and len(k) and support.tasks <= 8*len(k):
+        from hktex_splatting.triton.heat_kernel_splatting import expand_triangle_work
+        keys, entries = expand_triangle_work(support, geometry, patch_tiles, surface.tile_count)
+    else:
+        order = torch.arange(len(k), device=k.device)
+        faces = f.long()
+        repetitions = geometry.face_counts[faces]
+        prefix = repetitions.cumsum(0)-repetitions
+        entries = torch.repeat_interleave(order, repetitions, output_size=support.tasks)
+        patch = (torch.repeat_interleave(geometry.face_starts[faces]-prefix, repetitions,
+                                        output_size=support.tasks)+torch.arange(support.tasks, device=k.device))
+        tiles = patch_tiles[patch]
+        keys = k[entries].long()*surface.tile_count+tiles
     keys, permutation = keys.sort(stable=True)
     entries = entries[permutation].int()
-    valid = keys != torch.iinfo(torch.int64).max
-    first = valid & torch.cat((valid.new_ones(min(1, len(keys))), keys[1:] != keys[:-1]))
-    last = valid & torch.cat((keys[1:] != keys[:-1], valid.new_ones(min(1, len(keys)))))
-    groups = first.long().cumsum(0)-1
     capacity = min(len(keys), support.source_count*surface.active_tile_count)
-    queue = torch.full((capacity,), -1, device=k.device, dtype=torch.int64)
-    ranges = torch.zeros((capacity, 2), device=k.device, dtype=torch.int32)
     if backend == 'triton':
-        from hktex_splatting.triton.heat_kernel_splatting import group_triangle_work
-        group_triangle_work(keys, first, last, groups, queue, ranges)
+        from hktex_splatting.triton.heat_kernel_splatting import group_sorted_triangle_work
+        queue, ranges, count = group_sorted_triangle_work(keys, capacity)
     else:
+        valid = keys != torch.iinfo(torch.int64).max
+        first = valid & torch.cat((valid.new_ones(min(1, len(keys))), keys[1:] != keys[:-1]))
+        last = valid & torch.cat((keys[1:] != keys[:-1], valid.new_ones(min(1, len(keys)))))
+        groups = first.long().cumsum(0)-1
+        queue = torch.full((capacity,), -1, device=k.device, dtype=torch.int64)
+        ranges = torch.zeros((capacity, 2), device=k.device, dtype=torch.int32)
         index = torch.arange(len(keys), device=k.device)
         queue[groups[first]] = keys[first]
         ranges[groups[first], 0] = index[first].int()
         ranges[groups[last], 1] = index[last].int()+1
+        count = first.sum()
     counts = support.counts[surface.face_ids]
     pixel_offsets = torch.cat((counts.new_zeros(1), counts.cumsum(0)))
-    return TriangleTileWork(support, surface, queue, ranges, first.sum(), entries,
+    return TriangleTileWork(support, surface, queue, ranges, count, entries,
                             pixel_offsets)
 
 
@@ -245,6 +254,15 @@ def _hybrid_eager(field, heat, metric, work, inner):
     response = _responses_from_coefficients(heat[entries], metric[entries], g.bary[pixels], field.eigen)
     keep = torch.ones_like(entries, dtype=torch.bool)
     kernels = support.kernels[entries].long()
+    if getattr(work, 'pixel_candidates', None) is not None:
+        candidates = work.pixel_candidates
+        lo = torch.zeros_like(kernels)
+        hi = torch.full_like(lo, candidates.shape[1])
+        for _ in range(candidates.shape[1].bit_length()):
+            mid = (lo+hi)//2
+            right = candidates[pixels, mid.clamp_max(candidates.shape[1]-1)] < kernels
+            lo, hi = torch.where(right, mid+1, lo), torch.where(right, hi, mid)
+        keep = (lo < candidates.shape[1]) & (candidates[pixels, lo.clamp_max(candidates.shape[1]-1)] == kernels)
     weight = model.kernel_filter_func(response, epsilon=model.thresholds[kernels], sharpness=model.sharpnesses[kernels])
     weight = torch.where(keep, weight, 0.)
     width = max(1, support.maximum)
@@ -256,6 +274,11 @@ def _hybrid_eager(field, heat, metric, work, inner):
     if fragments:
         rw[valid] = weight[record[valid]]
         re[valid] = torch.where(keep[record[valid]], entries[record[valid]], -1)
+    if getattr(work, 'pixel_candidates', None) is not None:
+        # Match merge's entry-ID tie key: missing union members must sort
+        # after valid zero-weight candidates rather than occupying their slots.
+        order = torch.where(re >= 0, re, 2147483647).argsort(dim=1, stable=True)
+        re, rw = re.gather(1, order), rw.gather(1, order)
     picked = rw.detach().argsort(dim=1, descending=True, stable=True)[:, :min(inner, width)]
     se, sw = re.gather(1, picked), rw.gather(1, picked)
     colors = heat.new_zeros((*se.shape, 3))
@@ -266,6 +289,7 @@ def _hybrid_eager(field, heat, metric, work, inner):
     work.selected_entries, work.selected_weights = se, sw
     work.record_entries = torch.where(keep, entries, -1)
     work.responses = torch.where(keep, response, 0.)
+    work.record_weights=weight
     return rgb
 
 
@@ -300,7 +324,7 @@ class DirectTileRenderer:
     def __init__(self, field, surface, *, pixel_batch=256,
                  max_bin_bytes=512*1024**2, profile=False, selection='hybrid',
                  splat_backend='auto', max_contributions=16777216,
-                 support_cap=128, support_debug_dir=None):
+                 support_cap=0, support_debug_dir=None):
         if field.mesh.faces is not surface.faces or field.eigen._iso_embeddings is not surface.embedding:
             raise ValueError('Surface belongs to another field')
         cfg = field.eigen.faiss_index.config
@@ -326,19 +350,30 @@ class DirectTileRenderer:
         self._archive_version = self._archive._version
         from hktex_splatting.rendering.prepared_geometry import PreparedGeometry
         from hktex_splatting.rendering.resident import ResidentDispatchGeometry
-        from hktex_splatting.knn_heat.triangle_kernel_support import ResidentSupportGeometry
-        if getattr(field, 'support_selector', 'legacy') == 'fused':
-            from hktex_splatting.knn_heat.triangle_kernel_support import FusedResidentSupportGeometry
-            ResidentSupportGeometry = FusedResidentSupportGeometry
-        fixed = PreparedGeometry(len(field.mesh.faces), surface._ids_cpu, surface._bary_cpu,
-                                 surface.embedding.device, surface.tile_size, 'stable')
-        self.hybrid_geometry = ResidentDispatchGeometry(fixed)
-        self.hybrid_patch_tiles = torch.tensor(fixed._layout.patch_tiles.copy(), device=surface.embedding.device)
+        sample_dispatch = getattr(surface, 'dispatch_geometry', None)
+        if sample_dispatch is None:
+            fixed = PreparedGeometry(len(field.mesh.faces), surface._ids_cpu, surface._bary_cpu,
+                                     surface.embedding.device, surface.tile_size, 'stable')
+            self.hybrid_geometry = ResidentDispatchGeometry(fixed)
+            self.hybrid_patch_tiles = torch.tensor(fixed._layout.patch_tiles.copy(), device=surface.embedding.device)
+        else:
+            if sample_dispatch.surface is not surface or not sample_dispatch.valid():
+                raise ValueError('Invalid direct sample dispatch')
+            self.hybrid_geometry = sample_dispatch
+            self.hybrid_patch_tiles = sample_dispatch.patch_tiles
         self._hybrid_patch_version = self.hybrid_patch_tiles._version
-        self.hybrid_support = ResidentSupportGeometry(field.mesh.faces, surface.embedding,
-            surface._ids_cpu, field.model.cfg.knn_outer_k, profile=profile)
+        # The field owns fixed connectivity; current source-face support is fresh.
+        self.hybrid_support=getattr(field,'kernel_surface_support',None)
+        if self.hybrid_support is None:
+            from hktex_splatting.knn_heat.triangle_kernel_support import KernelSurfaceSupport
+            self.hybrid_support=KernelSurfaceSupport(field.mesh.faces,surface.embedding,
+                max_bytes=max_bin_bytes)
+            field.kernel_surface_support=self.hybrid_support
+        self.hybrid_support.visible=torch.unique(surface.face_ids,sorted=True)
 
-    def __call__(self, *, diffusion_time=None, trace=False, oracle=False, full_reference=False):
+    def __call__(self, *, diffusion_time=None, trace=False, oracle=False, full_reference=False, contributions=False):
+        if contributions and (trace or full_reference):
+            raise ValueError('Compact contributions require hybrid rendering without full tracing')
         f, g = self.field, self.surface
         m, e = f.model, f.eigen
         if (not g.valid() or f.mesh.faces is not g.faces or e._iso_embeddings is not g.embedding or
@@ -347,11 +382,9 @@ class DirectTileRenderer:
             raise ValueError('Mesh/embedding changed; rebuild TileSurface')
         if full_reference:
             return self._splat(diffusion_time, trace, True)
-        if m.cfg.knn_outer_k != self.hybrid_support.neighbors:
-            raise ValueError('Triangle support policy changed; rebuild the renderer')
         if self.hybrid_patch_tiles._version != self._hybrid_patch_version:
             raise ValueError('Hybrid tile geometry changed; rebuild the snapshot')
-        return self._hybrid(diffusion_time, trace, oracle)
+        return self._hybrid(diffusion_time, trace, oracle, contributions=contributions)
 
 
     def _splat(self, diffusion_time, trace, oracle):
@@ -364,9 +397,8 @@ class DirectTileRenderer:
         estimate = n*p*24+n*g.tile_count*32+p*min(inner, n)*64
         if n*p > self.max_contributions or estimate > self.max_bin_bytes:
             raise MemoryError('Kernel/pixel contributions exceed capacity; reduce workload or explicitly increase budgets')
-        backend = 'torch'
         with scope(self.profile, 'source_state'):
-            state = f.sources(diffusion_time)
+            state = f.sources(diffusion_time, backend='eager')
         torch._assert_async(torch.isfinite(state.embedding).all() & torch.isfinite(state.normalizer).all() &
                             (state.normalizer > 0).all(), 'Invalid live kernel state')
         work = full_spectrum_work(g, len(state.embedding))
@@ -380,8 +412,7 @@ class DirectTileRenderer:
         k = picked.shape[1]
         pixels = torch.arange(p, device=g.queries.device)[:, None].expand(-1, k).reshape(-1)
         with scope(self.profile, 'spectral_shading'):
-            fused = backend == 'triton' and state.phi.dtype == torch.float32
-            h, metric = _pixel_coefficients(f, state, g, pixels, picked.reshape(-1), fused)
+            h, metric = _pixel_coefficients(f, state, g, pixels, picked.reshape(-1))
             selected_response = _responses_from_coefficients(h, metric, g.bary[pixels], e).reshape(p, k)
             # A rejected tile is a discrete selection, including zero-weight
             # filler slots: no output or gradient may leak back through it.
@@ -409,7 +440,7 @@ class DirectTileRenderer:
             contribution_capacity=n*p, backward_records=p*k,
             semantics='all-positive spectral heat then top-k; no native outer-50 preselection')
 
-    def _hybrid(self, diffusion_time, trace, oracle):
+    def _hybrid(self, diffusion_time, trace, oracle, *, contributions=False):
         from hktex_splatting.rendering.resident import ResidentTopology
         f, g = self.field, self.surface
         m, e = f.model, f.eigen
@@ -420,7 +451,7 @@ class DirectTileRenderer:
             raise ValueError('Hybrid reconstruction uses the resident 1..32 reduction contract')
         backend = 'torch' if oracle else self.splat_backend
         with scope(self.profile, 'source_state'):
-            state = f.sources(diffusion_time)
+            state = f.sources(diffusion_time, backend='eager' if oracle else None)
         torch._assert_async(torch.isfinite(state.embedding).all() & torch.isfinite(state.normalizer).all() &
                             (state.normalizer > 0).all(), 'Invalid live hybrid kernel state')
         debugger = None
@@ -428,10 +459,19 @@ class DirectTileRenderer:
             from hktex_splatting.utils.support_debug import SupportDebugger
             debugger = SupportDebugger(self.support_debug_dir, f, state, g.camera)
         with scope(self.profile, 'triangle_support'):
-            support, stats = self.hybrid_support.select(state.embedding, self.support_cap,
-                dispatch_geometry=self.hybrid_geometry, max_records=self.max_contributions,
-                max_dispatch_bytes=self.max_bin_bytes,
-                **(dict(debug_callback=debugger.check) if debugger is not None else {}))
+            pixel_candidates = None
+            if self.hybrid_support.domain == 'spectral' and getattr(f,'validation_candidates',None) is None:
+                support, pixel_candidates, stats = self.hybrid_support.select_spectral(
+                    f.selection_embedding, g, m.cfg.knn_outer_k,
+                    dispatch_geometry=self.hybrid_geometry, max_records=self.max_contributions,
+                    max_dispatch_bytes=self.max_bin_bytes, pool_cap=self.support_cap, profile=self.profile,
+                    reference=backend == 'torch')
+            else:
+                support, stats = self.hybrid_support.select(m.kernel_face_ids, self.support_cap,
+                    dispatch_geometry=self.hybrid_geometry, max_records=self.max_contributions,
+                    max_dispatch_bytes=self.max_bin_bytes,profile=self.profile,
+                    validation_candidates=getattr(f,'validation_candidates',None), reference=backend == 'torch')
+        self.last_support_stats=stats
         if (support.fragments*24+support.tasks*112+len(support.kernels)*128+
                 len(g.pixels)*32*16 > self.max_bin_bytes):
             raise MemoryError('Hybrid coefficients/queue/pixel scratch exceed configured budget')
@@ -445,6 +485,7 @@ class DirectTileRenderer:
             work = triangle_tile_work(support, self.hybrid_geometry, g, backend, self.hybrid_patch_tiles)
             work.profile = self.profile
             work.capture_response = trace
+            work.pixel_candidates = pixel_candidates
         if not len(g.pixels):
             # Match the shared backward operator's zero adjoints for appearance/filter inputs even
             # on an empty view, so Adam still decays their existing moments.
@@ -455,14 +496,23 @@ class DirectTileRenderer:
             work.record_entries = torch.empty(0, device=heat.device, dtype=torch.long)
             work.responses = heat.new_empty(0)
         elif backend == 'triton':
-            rgb = _hybrid_device(heat, metric, m.kernel_colours, m._mean_colour, m.thresholds, m.sharpnesses,
-                                  work, inner, e.heat_weighting.config.gaussian_std, e.heat_weighting.config.eps)
+            with scope(self.profile, 'splat_forward'):
+                rgb = _hybrid_device(heat, metric, m.kernel_colours, m._mean_colour, m.thresholds, m.sharpnesses,
+                                      work, inner, e.heat_weighting.config.gaussian_std, e.heat_weighting.config.eps)
         else:
             with scope(self.profile, 'hybrid_eager_reduction'):
                 rgb = _hybrid_eager(f, heat, metric, work, inner)
         colors = m(rgb)
-        image = m._mean_colour.sum()*0+g.queries.new_zeros((g.shape[0]*g.shape[1], 3))
+        image = m._mean_colour.sum()*0+g.embedding.new_zeros((g.shape[0]*g.shape[1], 3))
         image = image.index_copy(0, g.pixels, colors).reshape(*g.shape, 3)
+        if contributions:
+            with scope(self.profile, 'training_contributions'):
+                top = torch.full_like(work.selected_entries, -1)
+                if len(support.kernels):
+                    top = torch.where((work.selected_entries >= 0) & (work.selected_entries < len(support.kernels)),
+                        support.kernels[work.selected_entries.clamp(0, len(support.kernels)-1).long()].long(), -1)
+                tape = dict(top=top, weights=work.selected_weights)
+                return image, tape
         if not trace:
             return image
         width = max(1, support.maximum)
@@ -471,26 +521,29 @@ class DirectTileRenderer:
         records = work.pixel_offsets[:-1, None]+lane
         entry = torch.full_like(records, -1)
         response = heat.new_zeros(records.shape)
+        filtered_response = heat.new_zeros(records.shape)
         if support.fragments:
             entry[valid] = work.record_entries[records[valid]].long()
             response[valid] = work.responses[records[valid]]
+            filtered_response[valid] = work.record_weights[records[valid]]
         outer = torch.full_like(entry, -1)
         top = torch.full_like(work.selected_entries, -1)
         if len(support.kernels):
             outer = torch.where(entry >= 0, support.kernels[entry.clamp_min(0)].long(), -1)
             top = torch.where((work.selected_entries >= 0) & (work.selected_entries < len(support.kernels)),
                 support.kernels[work.selected_entries.clamp(0, len(support.kernels)-1).long()].long(), -1)
-        return image, dict(bins=work, outer=outer, response=response, top=top, weights=work.selected_weights,
+        return image, dict(bins=work, outer=outer, response=response, filtered_response=filtered_response, top=top, weights=work.selected_weights,
             corner_heat=heat, gram=metric, mapping_kernels=support.kernels, entry_faces=support.entry_faces,
             selected_entries=work.selected_entries, support=stats, projection=projection_stats,
             query_embedding=g.queries, source_embedding=state.embedding.detach(),
             spectral_pairs=len(support.kernels)*3, coefficient_pairs=len(support.kernels),
             spectral_corner_evaluations=len(support.kernels)*3, spectral_modes=state.phi.shape[1],
             pixel_contributions=support.fragments, emitted_pixel_contributions=int((work.record_entries >= 0).sum()),
-            selection_backend='resident_triangle_support',
+            selection_backend=stats['backend'],
             tile_candidates_used_for_selection=True, faiss_index_rebuilt=False,
             kernel_triangle_support_constructed=True, dispatch='kernel_triangle_tile_queue',
             footprint_cutoff=0., queue_count=work.count,
             queue_capacity=len(work.keys), contribution_capacity=support.fragments,
             backward_records=len(g.pixels)*32,
-            semantics='Triangle-union candidate pool/cap and stable entry-order ties; distinct from pointwise outer-50 and full spectral coverage')
+            semantics=('Spectral pixel KNN membership; triangle-union coefficients' if pixel_candidates is not None else
+                'Approximate kernel-seeded graph support')+'; ascending source-ID ties; fresh corner coefficients')

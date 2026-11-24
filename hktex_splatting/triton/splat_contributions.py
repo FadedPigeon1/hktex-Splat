@@ -34,17 +34,24 @@ def emit(ENTRIES,PATCHES,RECORD_OFF,PATCH_OFF,PIXELS,BARY,KERNELS,HEAT,METRIC,
     tl.store(OUT_WEIGHT+out,weight,valid)
 
 
-@triton.jit
+@triton.jit(do_not_specialize=['ORIGIN', 'N'], do_not_specialize_on_alignment=['N'])
 def merge(SEGMENT_OFF,SORTED_INDEX,REC_ENTRY,REC_WEIGHT,ACTIVE,STATE_ENTRY,STATE_WEIGHT,
-          N:tl.constexpr,WIDTH:tl.constexpr,INNER:tl.constexpr,S:tl.constexpr):
+          N,WIDTH:tl.constexpr,INNER:tl.constexpr,S:tl.constexpr,
+          ORIGIN=0,RECORD_LIMIT:tl.constexpr=0,IDENTITY_INDEX:tl.constexpr=False):
     i=tl.program_id(0);pixel=tl.load(ACTIVE+i)
-    begin=tl.load(SEGMENT_OFF+pixel);end=tl.load(SEGMENT_OFF+pixel+1)
+    begin=tl.load(SEGMENT_OFF+pixel)+ORIGIN;end=tl.load(SEGMENT_OFF+pixel+1)
     lane=tl.arange(0,WIDTH)
     previous=lane<S
     old_entry=tl.load(STATE_ENTRY+pixel*S+lane,previous,2147483647)
     old_weight=tl.load(STATE_WEIGHT+pixel*S+lane,previous,0.)
     new_slot=lane-S;valid=(new_slot>=0)&(begin+new_slot<end)
-    record=tl.load(SORTED_INDEX+begin+new_slot,valid,0)
+    if RECORD_LIMIT>0:valid=valid&(new_slot<RECORD_LIMIT)
+    # HKS records are already pixel segmented: their permutation is identity.
+    # Reference renderers retain the explicit permutation by default.
+    if IDENTITY_INDEX:
+        record=begin+new_slot
+    else:
+        record=tl.load(SORTED_INDEX+begin+new_slot,valid,0)
     new_entry=tl.load(REC_ENTRY+record,valid,2147483647)
     new_weight=tl.load(REC_WEIGHT+record,valid,0.)
     entry=tl.where(previous,old_entry,new_entry)

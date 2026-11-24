@@ -1,0 +1,6 @@
+# Experimental overlay for converse_training.yaml; apply to BOTH backends.
+# Stop geodesic moves at mesh boundaries instead of circumventing holes.
+# Original default config, tracer implementation and heat equations are unchanged.
+trainer:
+  tracer:
+    avoid_holes: false

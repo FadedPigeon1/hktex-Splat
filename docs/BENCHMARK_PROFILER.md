@@ -7,6 +7,44 @@ profiles, images, checkpoints, JSON/CSV and plots described in this guide.
 Compact mode removes its private temporary files/caches after collecting the
 statistics and failure summaries; all correctness gates remain enabled.
 
+## Complete pipeline calculations in the Markdown report
+
+The default single-file report includes a side-by-side forward/loss/backward/
+optimizer timing table and a detailed calculation table for **both** original
+HKTex and HKS. No extra flag is required. New runs also report scope call counts,
+sampled work counts and the one-time geometry setup captured by the observer.
+
+- Original HKTex: source spectral preparation, FAISS index construction/search,
+  query preparation, neighbor distances, spectral gather/heat, distance weighting,
+  filtering, top-30 selection, weighted RGB reconstruction and output transform.
+- HKS: source preparation, triangle spectral candidate distances/selection,
+  support scans/packing, corner topology and spectral coefficients, tile queue
+  scheduling/grouping, contribution emission, top-30 selection and RGB reconstruction.
+- Training: gradient clearing, loss, total backward, identifiable spectral/filter/
+  RGB/distance gradients, HKS coefficient/contribution backward, geodesic movement,
+  other optimizer updates, schedulers/constraints and final synchronization wait.
+
+Timings come from the existing **separate diagnostic profiles**; speed runs remain
+uninstrumented. Host inclusive time, CPU self wall and correlated GPU kernel sums
+are distinct columns. Parent/child scopes overlap; do not add them. HKS barycentric
+interpolation, distance weighting and filtering share one fused emission kernel,
+so the report labels their combined cost instead of inventing separate timings.
+Native backward substeps use autograd forward-sequence/thread provenance; work
+that cannot be attributed stays in total backward. Missing, inactive or unmatched
+stages show N/A. Profiler parity failures and unvalidated diagnostics remain explicit.
+
+Geometry setup is separate from recurring updates. The observer does not profile
+offline eigendecomposition or all process startup/asset loading. Historical profiles
+remain readable but lack newly added scope/call/setup fields. Previously discarded
+traces cannot be recovered from an old compact report; rerun the workflow for new
+measurements, or rebuild from retained artifacts with the offline report command.
+
+Reporting-extension checks passed for synthetic CPU/CUPTI attribution, nested
+timing arithmetic, missing/historical profiles, Markdown generation, command
+previews and source preservation. Installing/restoring the actual observer also
+preserved exact CPU RGB/all-parameter VJPs on a small differentiable model. This
+does not validate either full renderer on a GPU; rerun the existing GPU gates.
+
 See [the matched benchmark protocol](HKTEX_VS_HKS_BENCHMARK.md) for the two
 retained workloads, metric definitions and current verification status.
 

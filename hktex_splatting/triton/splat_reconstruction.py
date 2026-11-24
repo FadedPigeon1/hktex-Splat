@@ -5,10 +5,75 @@ pair bounds to avoid recompiling when the supported pair count changes.
 Main API: reconstruct, reconstruct_backward, emit_backward."""
 import triton
 import triton.language as tl
+from triton.language.extra.cuda import libdevice
 
-@triton.jit(do_not_specialize=["PAIRS"], do_not_specialize_on_alignment=["PAIRS"])
+
+@triton.jit(do_not_specialize=['N', 'DX', 'DY', 'DZ', 'AMBIENT', 'INTENSITY', 'ALPHA2', 'F0'],
+            do_not_specialize_on_alignment=['N'])
+def material_lighting_forward(ALBEDO, NORMAL, VIEW, RGB, MULTIPLIER, N,
+                              DX, DY, DZ, AMBIENT, INTENSITY, ALPHA2, F0,
+                              GGX: tl.constexpr, SAVE: tl.constexpr, BLOCK: tl.constexpr):
+    """One pixel per lane; fixed light/material settings remain runtime inputs."""
+    p = tl.program_id(0)*BLOCK+tl.arange(0, BLOCK)
+    valid = p < N
+    nx = tl.load(NORMAL+p*3, valid, 0.)
+    ny = tl.load(NORMAL+p*3+1, valid, 0.)
+    nz = tl.load(NORMAL+p*3+2, valid, 0.)
+    vx = tl.load(VIEW+p*3, valid, 0.)
+    vy = tl.load(VIEW+p*3+1, valid, 0.)
+    vz = tl.load(VIEW+p*3+2, valid, 0.)
+    # Match Torch CUDA's three-component tree reduction: (x+z)+y.
+    nn = tl.maximum(libdevice.sqrt_rn((nx*nx+nz*nz)+ny*ny), 1e-6)
+    vn = tl.maximum(libdevice.sqrt_rn((vx*vx+vz*vz)+vy*vy), 1e-6)
+    ln = tl.maximum(libdevice.sqrt_rn((DX*DX+DZ*DZ)+DY*DY), 1e-6)
+    nx, ny, nz = tl.div_rn(nx, nn), tl.div_rn(ny, nn), tl.div_rn(nz, nn)
+    vx, vy, vz = tl.div_rn(vx, vn), tl.div_rn(vy, vn), tl.div_rn(vz, vn)
+    lx, ly, lz = tl.div_rn(DX, ln), tl.div_rn(DY, ln), tl.div_rn(DZ, ln)
+    nl = tl.minimum(tl.maximum((nx*lx+nz*lz)+ny*ly, 0.), 1.)
+    nv = tl.minimum(tl.maximum((nx*vx+nz*vz)+ny*vy, 0.), 1.)
+    fresnel = tl.full((BLOCK,), 0., tl.float32)
+    highlight = tl.full((BLOCK,), 0., tl.float32)
+    if GGX:
+        hx, hy, hz = lx+vx, ly+vy, lz+vz
+        hn = tl.maximum(libdevice.sqrt_rn((hx*hx+hz*hz)+hy*hy), 1e-6)
+        hx, hy, hz = tl.div_rn(hx, hn), tl.div_rn(hy, hn), tl.div_rn(hz, hn)
+        nh = tl.minimum(tl.maximum((nx*hx+nz*hz)+ny*hy, 0.), 1.)
+        vh = tl.minimum(tl.maximum((vx*hx+vz*hz)+vy*hy, 0.), 1.)
+        denominator = nh*nh*(ALPHA2-1.)+1.
+        distribution = tl.div_rn(ALPHA2, 3.141592653589793*(denominator*denominator))
+        gl = tl.div_rn(2.*nl, nl+libdevice.sqrt_rn(ALPHA2+(1.-ALPHA2)*(nl*nl)))
+        gv = tl.div_rn(2.*nv, nv+libdevice.sqrt_rn(ALPHA2+(1.-ALPHA2)*(nv*nv)))
+        fresnel = F0+(1.-F0)*libdevice.pow(1.-vh, 5.)
+        highlight = tl.div_rn(distribution*gl*gv*fresnel, 4.*tl.maximum(nv, 1e-6))
+    active = (nl > 0.) & (nv > 0.)
+    factor = AMBIENT+tl.where(active, INTENSITY*((1.-fresnel)/3.141592653589793)*nl, 0.)
+    if SAVE:
+        tl.store(MULTIPLIER+p, factor, valid)
+    for c in tl.static_range(3):
+        a = tl.load(ALBEDO+p*3+c, valid, 0.)
+        linear = tl.where(a <= .04045, a/12.92,
+                          libdevice.pow(tl.maximum(a+.055, 0.)/1.055, 2.4))
+        # Match the tensor oracle's forward operation order; factor is only its adjoint.
+        diffuse = linear/3.141592653589793
+        if GGX:
+            diffuse = diffuse*(1.-fresnel)
+        result = AMBIENT*linear+INTENSITY*tl.where(active, diffuse*nl+highlight, 0.)
+        tl.store(RGB+p*3+c, result, valid)
+
+
+@triton.jit(do_not_specialize=['N'], do_not_specialize_on_alignment=['N'])
+def material_lighting_backward(ALBEDO, MULTIPLIER, GRAD, RESULT, N, BLOCK: tl.constexpr):
+    i = tl.program_id(0)*BLOCK+tl.arange(0, BLOCK)
+    valid = i < N*3
+    a = tl.load(ALBEDO+i, valid, 0.)
+    factor = tl.load(MULTIPLIER+i//3, valid, 0.)
+    derivative = tl.where(a <= .04045, 1./12.92,
+        (2.4/1.055)*libdevice.pow(tl.maximum(a+.055, 0.)/1.055, 1.4))
+    tl.store(RESULT+i, tl.load(GRAD+i, valid, 0.)*factor*derivative, valid)
+
+@triton.jit(do_not_specialize=["PAIRS", "N"], do_not_specialize_on_alignment=["PAIRS", "N"])
 def reconstruct(STATE_ENTRY,STATE_WEIGHT,KERNELS,COLORS,BASE,FACE_IDS,RGB,
-                N:tl.constexpr,PAIRS,S:tl.constexpr):
+                N,PAIRS,S:tl.constexpr):
     pixel=tl.program_id(0);lane=tl.arange(0,S)
     entry=tl.load(STATE_ENTRY+pixel*S+lane);w=tl.load(STATE_WEIGHT+pixel*S+lane)
     valid=(entry>=0)&(entry<PAIRS)&(w>0)

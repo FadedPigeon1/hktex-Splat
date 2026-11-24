@@ -4,8 +4,8 @@ Shared visibility and tile layout for rendering and training.
 Main API: PreparedGeometry."""
 import numpy as np
 import torch
+from types import SimpleNamespace
 from hktex_splatting.rendering.triangle_tile_layout import dispatch
-from hktex_splatting.rendering.triangle_heat_map import FaceMap
 
 
 class PreparedGeometry:
@@ -22,9 +22,8 @@ class PreparedGeometry:
         self._ids, self._bary = ids.copy(), bary.copy()
         self.face_count, self.tile_size = face_count, tile_size
         self.requested_device = torch.device(device)
-        empty = FaceMap(np.zeros(face_count+1, np.int64), np.empty(0, np.int32),
-                        np.empty((0, 3), np.float32), np.empty((0, 6), np.float32),
-                        np.empty(0, np.float32))
+        # Layout preparation needs only empty CSR offsets/IDs, not heat arrays.
+        empty = SimpleNamespace(offsets=np.zeros(face_count+1,np.int64),kernels=np.empty(0,np.int32))
         self._layout = dispatch(empty, self._ids, tile_size)
         self._lengths = np.diff(self._layout.patch_offsets)
         self._face_counts = np.bincount(self._layout.patch_faces, minlength=face_count)

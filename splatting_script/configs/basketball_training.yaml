@@ -1,0 +1,185 @@
+# Basketball recipe: inherited HKTex settings; independent mesh/spectral assets.
+name: uv-texture-fitting
+description: ''
+tag: fit
+seed: 0
+use_timestamp: false
+exp_root_dir: outputs
+data_type: data.uv-texture-sampler
+data:
+  mesh_path: data/basketball/prepared/basketball.glb
+  bake_vert_colours_if_textured: false
+  merge_tex: true
+  batch_size: 4096
+  num_workers: 0
+  sampling_method: uniform
+  use_importance_sampling: true
+  importance_sampling_pool_size: 1000000
+  importance_sampling_warmup_steps: 250
+  importance_sampling_ema_beta: 0.99
+trainer_type: trainers.uv-texture
+trainer:
+  use_knn_implementation: true
+  tracer_type: modules.gpu-geodesic-tracer
+  tracer:
+    n_debug_traces: 10
+    debug: false
+  eigen_albo_type: modules.eigen-albo-interpolation-knn
+  eigen_albo:
+    k_eig: 256
+    mesh_path: data/basketball/prepared/basketball.glb
+    distance_weighting: gaussian_0.05
+    mass_type: one
+    local_frames: principal_curvatures
+    precompute_anisotropies:
+    - 1
+    - 5
+    - 15
+    - 30
+    - 60
+    - 100
+    - 200
+    precompute_angles_every_deg: 30
+    knn_embedding_dim: 64
+    faiss:
+      use_float16: false
+      distance_impl: bmm
+      build_db_norm: true
+      compile_distances: true
+    gather:
+      select_impl: bilinear4
+      compile_select: true
+      gather_impl: stream_vertices
+      compile_gather: true
+    weighting:
+      kernel: gaussian
+      gaussian_std: 0.05
+      normalize: false
+      compile_kernel: true
+    heat:
+      compile_heat: true
+    parse_weighting_from_str: true
+    use_precomputed: true
+    error_if_not_precomputed: true
+  model:
+    n_sources: 1000
+    kernel_dim: 32
+    diff_time: 0.06245046192097831
+    mass_type: one
+    init_min_threshold: 0.3
+    range_enforcement_type: pgd
+    init_kernel_edge_type: high_skewed
+    out_net: false
+    normalize_colours: false
+    allow_negative_colours: true
+    knn_outer_k: 50
+    knn_inner_k: 30
+  loss_type: mse_loss
+  # Shared original surface-random initialization for cross-mesh comparisons.
+  data_initialisation_random_ratio: 1.0
+  optimizers:
+  - name: Adam
+    args: {}
+    params:
+      model._mean_colour:
+        lr: 0.0009605697909535365
+      model._kernel_colours:
+        lr: 0.006154297191437912
+      model._angles:
+        lr: 0.09925815390934509
+      model._anisotropies:
+        lr: 0.0046734947696952505
+      model._thresholds:
+        lr: 0.0010937350855722754
+      model._sharpnesses:
+        lr: 0.001288570245082531
+    scheduler:
+      name: StepLR
+      args:
+        gamma: 0.5
+        step_size: 1000
+  - name: GeodesicOpt
+    args:
+      lr: 0.09914527998776132
+      momentum: 0.9
+    scheduler:
+      name: StepLR
+      args:
+        gamma: 0.5
+        step_size: 1000
+    tracer: tracer
+    params:
+      model._kernel_locations:
+        face_ids: model._kernel_face_ids
+  density_controllers:
+  - density_controller_type: density_controllers.importance_pruning
+    args:
+      start_iter: 500
+      prune_interval: 1000
+      accumulation_interval: 250
+      selection_threshold: 0.0016874044638848424
+      contrib_threshold: 0.034241733313642164
+      stop_iter: 2500
+  - density_controller_type: density_controllers.error_based_densification
+    args:
+      start_iter: 400
+      densify_interval: 100
+      error_accumulation_interval: 75
+      error_threshold: 0.02372325867109463
+      size_threshold: 0.17391363035121932
+      split_radius: 0.15
+      max_densify_ratio: 0.4
+      max_kernels: 5000
+      stop_iter: 3500
+optim:
+  iters: 5000
+  save_logs: true
+  save_model: true
+  save_model_name: model.pt
+  steps: 5000
+renderer:
+  n_rotating_frames: 5
+  point_batching: 512
+  camera_config:
+    camera_distance: 3.7
+    azimuth_deg: 180.0
+    elevation_deg: 0.0
+    camera_type: perspective
+    img_width: 256
+    img_height: 256
+    sampler_type: multijitter
+    sample_count: 4
+    fov: 40.0
+    aperture_radius: null
+    focus_distance: null
+    near_clip: 0.01
+    far_clip: 1000.0
+    tile_size: null
+    tile_size_heatkernels: null
+  emitter_config:
+    envmap_path: null
+    envmap_scale: 1.0
+    radiance: 1.0
+  integrator_config:
+    type: path
+    hide_emitters: false
+  ground_plane_config:
+    activated: true
+    rotation_axis:
+    - 1
+    - 0
+    - 0
+    rotation_angle: -90
+    scale: 10
+    translation:
+    - 0
+    - 0
+    - -0.1
+    checkerboard: false
+    plane_colour:
+    - 0.3
+    - 0.3
+    - 0.3
+  mitsuba_mesh_config:
+    twosided: false
+variables: {}

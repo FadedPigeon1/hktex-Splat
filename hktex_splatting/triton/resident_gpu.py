@@ -1,10 +1,109 @@
 """Select, scan and pack fresh ordered triangle/kernel support on the GPU.
 
-Shared HKS support construction: audited small-row selection and wide tiled merging.
-Main API: support_distances, select_support_rows, merge_support_tile,
+Current HKS uses graph_surface_frontier and support count/pack kernels.
+Retained reference utilities include small-row selection and wide tiled merging.
+Main API: support_distances, select_support_rows, merge_support_tile[_compact],
 finish_support_tiles, pack_support and support_scan_* kernels."""
 import triton
 import triton.language as tl
+# Historical imports remain valid for benchmark commands and cached callers.
+from hktex_splatting.triton.spectral_support_distances import (
+    _support_limit, support_distances, support_distances_blocked, support_seed_upper,
+)
+
+
+@triton.jit
+def graph_surface_frontier(ADJACENCY, SOURCE_FACES, SEEN, QUEUE, OVERFLOW,
+                           DEGREE: tl.constexpr, CAPACITY: tl.constexpr,
+                           HASH_SIZE: tl.constexpr, HOPS: tl.constexpr,
+                           BLOCK: tl.constexpr):
+    """Exact bounded BFS per source; overflow requests the unbounded tensor oracle.
+
+    Hash entries and queue rows belong exclusively to one GPU program. Every
+    face at most HOPS edges away is visited, including invisible intermediates.
+    No heat, learned parameter, or visibility cutoff controls traversal.
+    """
+    kernel = tl.program_id(0).to(tl.int64)
+    seed = tl.load(SOURCE_FACES+kernel).to(tl.int32)
+    queue_base = kernel*CAPACITY
+    hash_base = kernel*HASH_SIZE
+    seed_slot = (seed.to(tl.uint32)*2654435761) & (HASH_SIZE-1)
+    tl.store(SEEN+hash_base+seed_slot, seed)
+    tl.store(QUEUE+queue_base, seed)
+    tl.debug_barrier()
+    lane = tl.arange(0, BLOCK)
+    head = 0
+    tail = 1
+    overflow = 0
+    for _ in range(HOPS):
+        end = tail
+        cursor = head
+        while (cursor < end) & (overflow == 0):
+            index = cursor+lane
+            face = tl.load(QUEUE+queue_base+index, index < end, 0)
+            for edge in range(DEGREE):
+                if overflow == 0:
+                    neighbor = tl.load(ADJACENCY+face.to(tl.int64)*DEGREE+edge,
+                                       index < end, -1).to(tl.int32)
+                    pending = (index < end) & (neighbor >= 0)
+                    slot = (neighbor.to(tl.uint32)*2654435761) & (HASH_SIZE-1)
+                    inserted = tl.full((BLOCK,), False, tl.int1)
+                    probes = 0
+                    while (tl.sum(pending.to(tl.int32), 0) > 0) & (probes < HASH_SIZE):
+                        # atomic_cas has no mask. -2 can never occur in this
+                        # table, so inactive lanes cannot modify an entry.
+                        compare = tl.where(pending, -1, -2).to(tl.int32)
+                        previous = tl.atomic_cas(SEEN+hash_base+slot, compare, neighbor)
+                        inserted = inserted | (pending & (previous == -1))
+                        pending = pending & (previous != -1) & (previous != neighbor)
+                        slot = (slot+1) & (HASH_SIZE-1)
+                        probes += 1
+                    added = tl.sum(inserted.to(tl.int32), 0)
+                    rank = tl.cumsum(inserted.to(tl.int32), 0)-1
+                    tl.store(QUEUE+queue_base+tail+rank, neighbor,
+                             inserted & (tail+rank < CAPACITY))
+                    overflow = tl.where((tail+added > CAPACITY) |
+                                        (tl.sum(pending.to(tl.int32), 0) > 0), 1, overflow)
+                    tail += added
+                    tl.debug_barrier()
+            cursor += BLOCK
+        head = end
+    tl.store(OVERFLOW+kernel, overflow)
+
+
+@triton.jit
+def count_kernel_surface_support(NEIGHBORS, SOURCE_FACES, PIXEL_COUNTS,
+                                 SOURCE_COUNTS, VISIBLE_COUNTS, FACE_COUNTS,
+                                 WIDTH: tl.constexpr, BLOCK: tl.constexpr,
+                                 SOURCE_INDEXED: tl.constexpr = False):
+    """Count the exact fixed-hop relation and its current visible intersection."""
+    kernel = tl.program_id(0)
+    source_face = kernel if SOURCE_INDEXED else tl.load(SOURCE_FACES+kernel)
+    lane = tl.arange(0, BLOCK)
+    face = tl.load(NEIGHBORS+source_face*WIDTH+lane, lane < WIDTH, -1)
+    valid = (lane < WIDTH) & (face >= 0)
+    visible = valid & (tl.load(PIXEL_COUNTS+face, valid, 0) > 0)
+    tl.store(SOURCE_COUNTS+kernel, tl.sum(valid.to(tl.int32), 0))
+    tl.store(VISIBLE_COUNTS+kernel, tl.sum(visible.to(tl.int32), 0))
+    tl.atomic_add(FACE_COUNTS+face, 1, visible)
+
+
+@triton.jit(do_not_specialize=['SOURCES'], do_not_specialize_on_alignment=['SOURCES'])
+def pack_kernel_surface_support(NEIGHBORS, SOURCE_FACES, PIXEL_COUNTS,
+                                SOURCE_OFFSETS, KEYS, SOURCES,
+                                WIDTH: tl.constexpr, BLOCK: tl.constexpr,
+                                SOURCE_INDEXED: tl.constexpr = False):
+    """Pack only visible incidences; global face/source sorting stays unchanged."""
+    kernel = tl.program_id(0)
+    source_face = kernel if SOURCE_INDEXED else tl.load(SOURCE_FACES+kernel)
+    lane = tl.arange(0, BLOCK)
+    face = tl.load(NEIGHBORS+source_face*WIDTH+lane, lane < WIDTH, -1)
+    valid = (lane < WIDTH) & (face >= 0)
+    visible = valid & (tl.load(PIXEL_COUNTS+face, valid, 0) > 0)
+    rank = tl.cumsum(visible.to(tl.int32), axis=0)-1
+    offset = tl.load(SOURCE_OFFSETS+kernel)
+    key = face.to(tl.int64)*SOURCES+kernel
+    tl.store(KEYS+offset+rank, key, visible)
 
 
 @triton.jit
@@ -18,14 +117,6 @@ def pack_support(ROWS, VISIBLE, OFFSETS, KERNELS, FACES,
     kernel = tl.load(ROWS+row*STRIDE+1+lane, lane<count, 0)
     tl.store(KERNELS+start+lane, kernel, lane<count)
     tl.store(FACES+start+lane, face, lane<count)
-
-
-@triton.jit
-def _support_limit(kth, radius, GUARD: tl.constexpr):
-    # Keep the legacy sequence of float64 elementwise operations. In
-    # particular, do not round the Python guard through a float32 scalar.
-    guard = tl.full((), GUARD, tl.float64)
-    return (kth+2*radius)+guard*((1+kth)+radius)
 
 
 @triton.jit(do_not_specialize=['N', 'CAP', 'BASE', 'STRIDE'],
@@ -48,46 +139,6 @@ def pack_support_rows(DISTANCE, KTH, RADIUS, NEAREST, ROWS, N, CAP, BASE, STRIDE
         count = tl.sum(valid.to(tl.int32), 0)
         tl.store(ROWS+(BASE+row)*STRIDE, count)
         tl.store(ROWS+(BASE+row)*STRIDE+1+lane, ordered, lane < CAP)
-
-
-@triton.jit
-def _warp_sum_rows(values, WIDTH: tl.constexpr, PAIRS: tl.constexpr):
-    lane = tl.arange(0, WIDTH)
-    for shift in tl.static_range(5):
-        offset = 16 >> shift
-        peer = tl.where(lane % 32+offset < 32, lane+offset, lane)
-        values = values+tl.gather(values, tl.broadcast_to(peer[None, :], (PAIRS, WIDTH)), 1)
-    return values
-
-
-@triton.jit(do_not_specialize=['N', 'CS0', 'CS1', 'SS0', 'SS1'],
-            do_not_specialize_on_alignment=['N', 'CS0', 'CS1', 'SS0', 'SS1'])
-def support_distances(CENTER, SOURCE, DISTANCE, N, CS0, CS1, SS0, SS1,
-                      DIM: tl.constexpr, BD: tl.constexpr, PAIRS: tl.constexpr,
-                      CUDA_SQRT: tl.constexpr):
-    # Match ATen's 256-lane CUDA cdist reduction for DIM<=256. Each native
-    # lane has at most one product, so no multiply-accumulate rounding differs.
-    row = tl.program_id(1)
-    source = tl.program_id(0)*PAIRS+tl.arange(0, PAIRS)
-    dim = tl.arange(0, BD)
-    c = tl.load(CENTER+row*CS0+dim*CS1, dim < DIM, 0.).to(tl.float64)
-    s = tl.load(SOURCE+source[:, None]*SS0+dim[None, :]*SS1,
-                (source[:, None] < N) & (dim[None, :] < DIM), 0.).to(tl.float64)
-    delta = tl.abs(c[None, :]-s)
-    partial = tl.where(dim[None, :] < DIM, delta*delta, 0.)
-    partial = _warp_sum_rows(partial, BD, PAIRS)
-    warp = tl.arange(0, 32)
-    start = tl.where(warp < BD//32, warp*32, 0)
-    warp_values = tl.gather(partial, tl.broadcast_to(start[None, :], (PAIRS, 32)), 1)
-    warp_values = tl.where(warp[None, :] < BD//32, warp_values, 0.)
-    total = _warp_sum_rows(warp_values, 32, PAIRS)
-    total = tl.gather(total, tl.full((PAIRS, 1), 0, tl.int32), 1).reshape((PAIRS,))
-    if CUDA_SQRT:
-        value = cuda_libdevice.sqrt_rn(total)
-    else:
-        # Interpreter's np.sqrt(float64); CUDA always uses explicit RN libdevice.
-        value = tl.sqrt(total)
-    tl.store(DISTANCE+row*N+source, value, source < N)
 
 
 @triton.jit(do_not_specialize=['N', 'K', 'CAP', 'BASE', 'STRIDE'],
@@ -231,4 +282,207 @@ def support_scan_offsets(OFFSETS, STARTS, FACES, BLOCK: tl.constexpr):
         tl.store(OFFSETS, 0)
 
 
-from triton.language.extra.cuda import libdevice as cuda_libdevice
+@triton.jit
+def _exact_radix_rank(keys, RANK, BLOCK: tl.constexpr):
+    """Exact unsigned key order statistic; no approximate pivot termination."""
+    active = tl.full((BLOCK,), True, tl.int1)
+    rank = RANK
+    cutoff = tl.full((), 0, tl.uint64)
+    done = tl.full((), False, tl.int1)
+    bins = tl.arange(0, 256)
+    byte = tl.full((), 0, tl.int32)
+    # A bounded GPU loop avoids replicating the large row's code eight times.
+    while (byte < 8) & (~done):
+        low = tl.min(tl.where(active, keys, tl.full((), 0xffffffffffffffff, tl.uint64)), 0)
+        high = tl.max(tl.where(active, keys, 0), 0)
+        if low == high:
+            cutoff = low
+            done = True
+        else:
+            shift = 56-byte*8
+            low_digit = (low >> shift) & 255
+            high_digit = (high >> shift) & 255
+            if low_digit == high_digit:
+                # All surviving keys share this byte: no histogram or rank
+                # update is needed. This is an exact prefix shortcut.
+                cutoff = cutoff | (low_digit << shift)
+            else:
+                digit = ((keys >> shift) & 255).to(tl.int32)
+                histogram = tl.histogram(digit, 256, mask=active)
+                cumulative = tl.cumsum(histogram, 0)
+                bucket = tl.min(tl.where(cumulative >= rank, bins, 256), 0)
+                rank = rank-tl.sum(tl.where(bins < bucket, histogram, 0), 0)
+                cutoff = cutoff | (bucket.to(tl.uint64) << shift)
+                active = active & (digit == bucket)
+        byte += 1
+    return cutoff
+
+
+@triton.jit(do_not_specialize=['N', 'K', 'CAP', 'BASE', 'STRIDE'],
+            do_not_specialize_on_alignment=['N', 'K', 'CAP', 'BASE', 'STRIDE'])
+def select_support_row_radix(DISTANCE, RADIUS, ROWS, N, K, CAP, BASE, STRIDE,
+                             GUARD: tl.constexpr, BLOCK: tl.constexpr):
+    """Select wide-row neighbor/cap cutoffs directly, without source-tile merges."""
+    row = tl.program_id(0)
+    lane = tl.arange(0, BLOCK)
+    distance = tl.load(DISTANCE+row*N+lane, lane < N, float('nan'))
+    key = tl.where((lane < N) & (distance == distance), distance.to(tl.uint64, bitcast=True),
+                   tl.full((), 0xffffffffffffffff, tl.uint64))
+    kth = _exact_radix_rank(key, K, BLOCK).to(tl.float64, bitcast=True)
+    cutoff = _exact_radix_rank(key, CAP, BLOCK)
+    less = (lane < N) & (key < cutoff)
+    equal = (lane < N) & (key == cutoff)
+    nearest = less | (equal & (tl.cumsum(equal.to(tl.int32), 0) <= CAP-tl.sum(less.to(tl.int32), 0)))
+    bound = _support_limit(kth, tl.load(RADIUS+row), GUARD)
+    admitted = nearest & (key.to(tl.float64, bitcast=True) <= bound)
+    count = tl.sum(admitted.to(tl.int32), 0)
+    destination = tl.cumsum(admitted.to(tl.int32), 0)-1
+    start = (BASE+row)*STRIDE
+    tl.store(ROWS+start, count)
+    tl.store(ROWS+start+1+lane, N, (lane >= count) & (lane < CAP))
+    tl.store(ROWS+start+1+destination, lane, admitted)
+
+
+@triton.jit
+def pack_support_cutoffs(DISTANCE,RADIUS,KTH,CUTOFF,ROWS,N,CAP,BASE,STRIDE,KS,CS,
+                         GUARD:tl.constexpr,BLOCK:tl.constexpr):
+    """Pack exact topk value cutoffs; boundary ties use ascending source IDs."""
+    row=tl.program_id(0);lane=tl.arange(0,BLOCK)
+    distance=tl.load(DISTANCE+row*N+lane,lane<N,float('nan'))
+    sentinel=tl.full((),0xffffffffffffffff,tl.uint64)
+    key=tl.where((lane<N)&(distance==distance),distance.to(tl.uint64,bitcast=True),sentinel)
+    kth=tl.load(KTH+row*KS);raw=tl.load(CUTOFF+row*CS)
+    cutoff=tl.where(raw==raw,raw.to(tl.uint64,bitcast=True),sentinel)
+    less=(lane<N)&(key<cutoff);equal=(lane<N)&(key==cutoff)
+    nearest=less|(equal&(tl.cumsum(equal.to(tl.int32),0)<=CAP-tl.sum(less.to(tl.int32),0)))
+    admitted=nearest&(distance<=_support_limit(kth,tl.load(RADIUS+row),GUARD))
+    count=tl.sum(admitted.to(tl.int32),0);destination=tl.cumsum(admitted.to(tl.int32),0)-1
+    start=(BASE+row)*STRIDE
+    tl.store(ROWS+start,count)
+    tl.store(ROWS+start+1+lane,N,(lane>=count)&(lane<CAP))
+    tl.store(ROWS+start+1+destination,lane,admitted)
+
+
+@triton.jit(do_not_specialize=['N', 'TILE_N', 'START'],
+            do_not_specialize_on_alignment=['N', 'TILE_N', 'START'])
+def merge_support_tile_compact(DISTANCE, KEYS, SOURCES, N, TILE_N, START,
+                               TILE: tl.constexpr, KEEP: tl.constexpr,
+                               LOG_TILE: tl.constexpr, LOG_MERGE: tl.constexpr):
+    """Exact local top-KEEP and merge of two sorted KEEP lists.
+
+    Every source is examined; float64 key bits and source-ID ties are retained.
+    The first tile initializes the lists, avoiding host sentinel fills.
+    """
+    row = tl.program_id(0)
+    lane = tl.arange(0, TILE)
+    distance = tl.load(DISTANCE+row*TILE_N+lane, lane < TILE_N, float('nan'))
+    sentinel = tl.full((), 0xffffffffffffffff, tl.uint64)
+    keys = tl.where((lane < TILE_N) & (distance == distance),
+                    distance.to(tl.uint64, bitcast=True), sentinel)
+    sources = tl.where(lane < TILE_N, START+lane, N)
+    keys, sources = _sort_distance_ids(keys, sources, TILE, LOG_TILE)
+    if START == 0:
+        initial_lane = tl.arange(0, KEEP)
+        tl.store(KEYS+row*KEEP+initial_lane, tl.gather(keys, initial_lane, 0))
+        tl.store(SOURCES+row*KEEP+initial_lane, tl.gather(sources, initial_lane, 0))
+    else:
+        out = tl.arange(0, 2*KEEP)
+        fresh = tl.minimum(out, KEEP-1)
+        old = 2*KEEP-1-out
+        old_keys = tl.load(KEYS+row*KEEP+old, out >= KEEP, -1).to(tl.uint64, bitcast=True)
+        old_sources = tl.load(SOURCES+row*KEEP+old, out >= KEEP, N)
+        joined_keys = tl.where(out < KEEP, tl.gather(keys, fresh, 0), old_keys)
+        joined_sources = tl.where(out < KEEP, tl.gather(sources, fresh, 0), old_sources)
+        # Ascending fresh prefix + descending old list form a bitonic sequence.
+        for step in tl.static_range(LOG_MERGE):
+            stride = KEEP >> step
+            peer = out ^ stride
+            other_key = tl.gather(joined_keys, peer, 0)
+            other_source = tl.gather(joined_sources, peer, 0)
+            greater = (joined_keys > other_key) | ((joined_keys == other_key) & (joined_sources > other_source))
+            less = (joined_keys < other_key) | ((joined_keys == other_key) & (joined_sources < other_source))
+            swap = tl.where((out & stride) == 0, greater, less)
+            joined_keys = tl.where(swap, other_key, joined_keys)
+            joined_sources = tl.where(swap, other_source, joined_sources)
+        tl.store(KEYS+row*KEEP+out, joined_keys, out < KEEP)
+        tl.store(SOURCES+row*KEEP+out, joined_sources, out < KEEP)
+
+
+@triton.jit(do_not_specialize=['N', 'TILE_N', 'START'],
+            do_not_specialize_on_alignment=['N', 'TILE_N', 'START'])
+def merge_support_tile_radix(DISTANCE, LOCAL_KEYS, LOCAL_SOURCES, KEYS, SOURCES, N, TILE_N, START,
+                               TILE: tl.constexpr, KEEP: tl.constexpr,
+                               LOG_KEEP: tl.constexpr, LOG_MERGE: tl.constexpr):
+    """Exact byte-radix local selection and small sorted-list merge.
+
+    Every source is examined; float64 key bits and source-ID ties are retained.
+    The first tile initializes the lists, avoiding host sentinel fills.
+    """
+    row = tl.program_id(0)
+    lane = tl.arange(0, TILE)
+    distance = tl.load(DISTANCE+row*TILE_N+lane, lane < TILE_N, float('nan'))
+    sentinel = tl.full((), 0xffffffffffffffff, tl.uint64)
+    keys = tl.where((lane < TILE_N) & (distance == distance),
+                    distance.to(tl.uint64, bitcast=True), sentinel)
+    sources = tl.where(lane < TILE_N, START+lane, N)
+    active = tl.full((TILE,), True, tl.int1)
+    rank = tl.full((), KEEP, tl.int32)
+    cutoff = tl.full((), 0, tl.uint64)
+    done = tl.full((), False, tl.int1)
+    bins = tl.arange(0, 256)
+    # Most-significant-byte selection, entirely within this GPU program.
+    # Early exit is exact only when all surviving keys are identical.
+    for byte in tl.static_range(8):
+        if not done:
+            low = tl.min(tl.where(active, keys, sentinel), 0)
+            high = tl.max(tl.where(active, keys, 0), 0)
+            if low == high:
+                cutoff = low
+                done = True
+            else:
+                shift = 56-byte*8
+                digit = ((keys >> shift) & 255).to(tl.int32)
+                histogram = tl.histogram(digit, 256, mask=active)
+                cumulative = tl.cumsum(histogram, 0)
+                bucket = tl.min(tl.where(cumulative >= rank, bins, 256), 0)
+                rank -= tl.sum(tl.where(bins < bucket, histogram, 0), 0)
+                cutoff = cutoff | (bucket.to(tl.uint64) << shift)
+                active = active & (digit == bucket)
+    radix_less = keys < cutoff
+    radix_equal = keys == cutoff
+    retained = radix_less | (radix_equal & (tl.cumsum(radix_equal.to(tl.int32), 0) <= KEEP-tl.sum(radix_less.to(tl.int32), 0)))
+    destination = tl.cumsum(retained.to(tl.int32), 0)-1
+    tl.store(LOCAL_KEYS+row*KEEP+destination, keys, retained)
+    tl.store(LOCAL_SOURCES+row*KEEP+destination, sources, retained)
+    # Unique compact destinations are written by this CTA. Synchronize before
+    # its other warps gather the compact prefix; no cross-CTA sharing occurs.
+    tl.debug_barrier()
+    prefix_lane = tl.arange(0, KEEP)
+    prefix_keys = tl.load(LOCAL_KEYS+row*KEEP+prefix_lane).to(tl.uint64, bitcast=True)
+    prefix_sources = tl.load(LOCAL_SOURCES+row*KEEP+prefix_lane)
+    keys, sources = _sort_distance_ids(prefix_keys, prefix_sources, KEEP, LOG_KEEP)
+    if START == 0:
+        initial_lane = tl.arange(0, KEEP)
+        tl.store(KEYS+row*KEEP+initial_lane, tl.gather(keys, initial_lane, 0))
+        tl.store(SOURCES+row*KEEP+initial_lane, tl.gather(sources, initial_lane, 0))
+    else:
+        out = tl.arange(0, 2*KEEP)
+        fresh = tl.minimum(out, KEEP-1)
+        old = 2*KEEP-1-out
+        old_keys = tl.load(KEYS+row*KEEP+old, out >= KEEP, -1).to(tl.uint64, bitcast=True)
+        old_sources = tl.load(SOURCES+row*KEEP+old, out >= KEEP, N)
+        joined_keys = tl.where(out < KEEP, tl.gather(keys, fresh, 0), old_keys)
+        joined_sources = tl.where(out < KEEP, tl.gather(sources, fresh, 0), old_sources)
+        # Ascending fresh prefix + descending old list form a bitonic sequence.
+        for step in tl.static_range(LOG_MERGE):
+            stride = KEEP >> step
+            peer = out ^ stride
+            other_key = tl.gather(joined_keys, peer, 0)
+            other_source = tl.gather(joined_sources, peer, 0)
+            greater = (joined_keys > other_key) | ((joined_keys == other_key) & (joined_sources > other_source))
+            less = (joined_keys < other_key) | ((joined_keys == other_key) & (joined_sources < other_source))
+            swap = tl.where((out & stride) == 0, greater, less)
+            joined_keys = tl.where(swap, other_key, joined_keys)
+            joined_sources = tl.where(swap, other_source, joined_sources)
+        tl.store(KEYS+row*KEEP+out, joined_keys, out < KEEP)
+        tl.store(SOURCES+row*KEEP+out, joined_sources, out < KEEP)

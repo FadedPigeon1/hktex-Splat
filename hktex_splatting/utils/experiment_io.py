@@ -19,7 +19,7 @@ ROOT = HERE.parents[1]
 PREVIOUS = ROOT / "experiments/converse_renderer_comparison"
 MESH = ROOT / "data/converse/prepared/converse__free.glb"
 SPECTRAL = MESH.with_name("converse__free_eigen_albo_principal_curvatures.pt")
-CAMERAS = ROOT / "experiments/converse_fidelity/cameras.json"
+CAMERAS = ROOT / "data/converse/cameras.json"
 VIEWS = ("top", "side", "three_quarter", "logo_closeup")
 
 
@@ -55,19 +55,32 @@ def unique_output(prefix):
     return path
 
 
-def configure_cache(run_name, root=Path("/tmp/hktex_heat_kernel_splatting")):
+def configure_cache(run_name, root=Path("/tmp/hktex_heat_kernel_splatting"), *, compiled_namespace=None):
+    """Keep run workspaces unique; optionally reuse backend-specific toolchain files.
+
+    Shared files are compiler binaries/IR and font metadata. Learned tensors,
+    coefficients, visibility, checkpoints and loader workspaces are never reused.
+    Legacy callers keep their original isolated-cache policy by default.
+    """
     root = Path(os.environ.get("HKTEX_CACHE_ROOT", root))
     root = Path(root).resolve()
     if root.is_relative_to(ROOT) or ROOT.is_relative_to(root):
         raise ValueError("Disposable caches must be outside the repository")
     base = root / run_name
     base.mkdir(parents=True, exist_ok=False)
+    compiled = base
+    if compiled_namespace is not None:
+        if compiled_namespace not in ('native', 'hybrid'):
+            raise ValueError('Expected a native or hybrid compiler namespace')
+        compiled = root / ('compiled_'+str(os.getuid())) / compiled_namespace
+        compiled.mkdir(parents=True, exist_ok=True)
     mapping = {"TORCHINDUCTOR_CACHE_DIR":"inductor", "TRITON_CACHE_DIR":"triton",
         "TORCH_EXTENSIONS_DIR":"extensions", "NUMBA_CACHE_DIR":"numba", "MPLCONFIGDIR":"mpl",
         "CUDA_CACHE_PATH":"cuda", "XDG_CACHE_HOME":"xdg", "TMPDIR":"tmp", "TMP":"tmp", "TEMP":"tmp"}
     for key, folder in mapping.items():
-        (base / folder).mkdir(exist_ok=True)
-        os.environ[key] = str(base / folder)
+        directory = (base if folder == 'tmp' else compiled) / folder
+        directory.mkdir(exist_ok=True)
+        os.environ[key] = str(directory)
     os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
     sys.dont_write_bytecode = True
     for key in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):

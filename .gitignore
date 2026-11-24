@@ -1,4 +1,15 @@
 *.ipynb
+# Research inputs and experiment outputs are kept outside source commits.
+/experiments/
+/archive/
+*.glb
+*.gltf
+*.obj
+*.ply
+*.stl
+*.off
+*.fbx
+*.blend
 __pycache__
 *.py[cod]
 .vscode
@@ -24,6 +35,7 @@ tune_*.txt
 # Track the asset guide and directory placeholders.
 /data/converse/*
 !/data/converse/README.md
+!/data/converse/cameras.json
 !/data/converse/raw/
 /data/converse/raw/**
 !/data/converse/raw/.gitkeep
@@ -32,6 +44,14 @@ tune_*.txt
 !/data/converse/prepared/.gitkeep
 !/data/converse/prepared/textures/
 !/data/converse/prepared/textures/.gitkeep
+
+# Piggy input copies and spectral archives stay local; camera JSON stays visible.
+/data/piggy/prepared/**
+
+# Additional local input meshes and generated spectral assets; keep camera JSON.
+/data/*.glb
+/data/teapot/prepared/**
+/data/basketball/prepared/**
 
 # Generated benchmark/training artifacts and runtime caches stay local.
 /experiments/**/results/**
@@ -46,3 +66,10 @@ tune_*.txt
 
 # Verified recovery payloads stay local; manifests and recovery instructions remain visible.
 /archive/three_backends/*/*.tar.gz
+
+# Additional experiment inputs and original-solver spectral archives stay local.
+/data/bowl/prepared/**
+/data/light_saber/prepared/**
+/data/light_saber_small/prepared/**
+/data/punga_chips/prepared/**
+/data/skull/prepared/**
